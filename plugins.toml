@@ -1,0 +1,8 @@
+# Plugins are DECLARED here and installed by agentbox (`ab profile install claude`).
+# Never vendor plugin files into skills/: EGM resolves its personas and standards via
+# ${CLAUDE_PLUGIN_ROOT} and breaks when copied.
+
+[[plugin]]
+name = "egm@egm"
+marketplace = "google/elephant-goldfish-model"
+ref = "464db031e7dd1b9a79803ac8ea45f55c7c20c5bc"
