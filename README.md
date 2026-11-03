@@ -1,7 +1,7 @@
 # agentbox-profile-claude
 
-Tim's Claude Code profile for [agentbox](https://github.com/) (`ab`), a rootless-podman sandbox
-launcher. **This repo is the source.** The live profile is a clone of it at
+Tim's Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launcher.
+**This repo is the source.** The live profile is a clone of it at
 `~/.config/agentbox/claude/profile`; nothing here edits that clone except `./build.sh deploy`.
 
 ## What each part is

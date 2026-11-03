@@ -3,22 +3,27 @@
 Skills vendored into `skills/`. Plugins are not vendored — they are declared in `plugins.toml`
 and installed by agentbox.
 
+Each entry below was verified by fetching the file from the pinned commit and diffing it against
+the vendored copy. Re-verify the same way after any re-sync.
+
 ## show-me
 
 - Source: https://github.com/humanlayer/skills — `plugins/show-me/skills/show-me`
 - Commit: `4d69d20f6e9b57b4fcf0d501ccfb1be961f0f329`
-- License: MIT (`skills/show-me/LICENSE`)
-- Local changes: upstream's own note says local changes are described in a comment at the top of
-  the skill's frontmatter. **No such comment is present in the vendored file**, so the changes
-  are undocumented here. Tim to fill this in (see "Open" below).
+- License: MIT (`skills/show-me/LICENSE`, identical to upstream's root `LICENSE`)
+- Local changes: **none.** `SKILL.md` is byte-identical to upstream at that commit. The task
+  described local changes recorded in a frontmatter comment; there is no such comment, and the
+  diff is empty, so there is nothing to record.
 
 ## ub-mode
 
-- Source: https://github.com/unclebob/ub-mode — `plugins/ub-mode/skills/ub-mode`
+- Source: https://github.com/unclebob/ub-mode — `SKILL.md` at the repository root.
+  (The path given when this was vendored, `plugins/ub-mode/skills/ub-mode`, does not exist at
+  this commit — upstream keeps the skill at the top level. Corrected here.)
 - Commit: `3da62bf3fcfd2034de41f30d920d2739e566171f`
-- License: MIT (`skills/ub-mode/LICENSE`)
-- Local changes: same as above — the frontmatter carries no comment describing the local
-  changes, so they are undocumented here. Tim to fill this in.
+- License: MIT (`skills/ub-mode/LICENSE`, identical to upstream's root `LICENSE`)
+- Local changes: **none.** `SKILL.md` is byte-identical to upstream at that commit, and it
+  carries no frontmatter comment, for the same reason as above.
 
 ## mags-manifest-design
 
@@ -26,12 +31,16 @@ and installed by agentbox.
   `mags-codedev-extension/skills/mags-manifest-design`
 - Commit: `63e0271ae259e973123984fa065b6d00572a277a`
 - License: Tim's own project
-- Local changes: none
+- Local changes: none. Not diffed against upstream — the repo is private, so the sandbox's
+  egress could not reach it. The other two were diffed successfully.
 
-## Open
+## Re-syncing a vendored skill
 
-`show-me/SKILL.md` and `ub-mode/SKILL.md` were vendored with the instruction not to edit them,
-and neither contains the frontmatter comment that was supposed to describe its local changes.
-Either the comment was lost before these landed in `incoming/`, or the files are verbatim
-upstream copies. Diffing against the pinned commits would settle it; the sandbox cannot reach
-those paths. Until then the two "Local changes" entries above are unverified.
+```
+curl -sSL https://raw.githubusercontent.com/<owner>/<repo>/<new-commit>/<path>/SKILL.md \
+  -o skills/<name>/SKILL.md
+```
+
+Then update the commit above, note any local changes you are deliberately keeping, and run
+`./build.sh check`. Prefer carrying zero local changes; if you must keep one, put it in a
+`comments:` key in the frontmatter so the next re-sync surfaces the conflict.
