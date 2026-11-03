@@ -21,3 +21,4 @@ RUN set -eux; \
     nvim --version
 
 ENV EDITOR=nvim
+ENV VISUAL=nvim

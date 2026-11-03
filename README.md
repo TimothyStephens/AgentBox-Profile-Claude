@@ -19,10 +19,18 @@ Tim's Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launche
 | `tools/check.py` | The validator `check` runs (python3 ≥ 3.11, stdlib only) | — |
 | `tests/run.sh` | Tests for the validator and the host guards | — |
 | `THIRD_PARTY.md` | Source, commit, license and local changes of vendored skills | — |
+| `PARITY.md` | What must stay identical to the OMP profile repo, and what may differ | — |
 | `.dev/` | Scratch space: EGM artifacts (`.dev/docs`), show-me's HTML files | Gitignored; never deployed |
 
 `skills/README.md`, `agents/README.md`, and `commands/README.md` each state the file format and
 the frontmatter Claude Code expects. Read those before adding anything.
+
+This repo has a sibling, `agentbox-profile-omp`, and the two must match at a high level.
+`PARITY.md` is the contract: it is byte-identical in both repos and says what is shared (the
+instruction-file core block, `build.sh`'s commands and exit codes, the `THIRD_PARTY.md` format,
+the `Containerfile`, the `plugins.toml` format, this README's section order, the shared `check`
+rules and their test case names) and what may differ. Change anything shared here and the
+sibling needs the same change.
 
 Two things that are easy to get wrong:
 
@@ -42,8 +50,9 @@ edit  ->  ./build.sh check  ->  git commit  ->  ./build.sh all   (Tim, on the ho
 every problem as `path: problem` and exits 1 if any of them is an error. Warnings print the same
 way and do not fail the run. It rejects any top-level entry it does not recognize, so adding a
 directory here means adding it to `TOP_LEVEL` in `tools/check.py` too. `.dev/` is allowed and
-its contents are not scanned — it is gitignored scratch space and nothing in it reaches a
-session.
+exempt from the symlink and file-size rules — it is gitignored scratch space and nothing in it
+reaches a session — but a file named like a secret (`.env*`, `*.pem`, `id_*`) is an error
+anywhere, `.dev/` included.
 
 `./build.sh status` runs anywhere too: it compares the live profile's commit against this repo's
 HEAD, lists the plugin pins, and reports whether `ab` and its subcommands are available.

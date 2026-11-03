@@ -8,3 +8,4 @@ RUN set -eux; \
     rm -f /tmp/tool.tgz
 
 ENV EDITOR=nvim
+ENV VISUAL=nvim

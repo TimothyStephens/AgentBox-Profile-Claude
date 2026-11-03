@@ -38,18 +38,22 @@ TOP_LEVEL = {
     "tools",
     "tests",
     "THIRD_PARTY.md",
+    "PARITY.md",
     "README.md",
     # not part of the profile, but expected in a working tree
     ".git",
     ".gitignore",
     # Scratch space for EGM artifacts and show-me's HTML files, as in the Claude repo.
-    # Gitignored (.gitignore is checked below) and skipped by the file walk, since nothing
-    # in it reaches a session.
+    # Gitignored and never deployed, so its contents are exempt from the symlink and size
+    # rules -- but not from the secret-shaped-filename rule, which holds anywhere.
     ".dev",
 }
 
-# Directories whose contents are not part of the profile and are not walked.
-SKIP_DIRS = {".git", ".dev"}
+# Not walked at all.
+SKIP_DIRS = {".git"}
+
+# Walked, but only the secret-shaped-filename rule applies: not a tracked path.
+UNTRACKED_DIRS = {".dev"}
 
 # Entries that must exist. Containerfile is optional (it is a personal tool layer).
 REQUIRED = [
@@ -239,16 +243,22 @@ def check_files(root: Path, rep: Report) -> None:
         rel = path.relative_to(root)
         if rel.parts and rel.parts[0] in SKIP_DIRS:
             continue
+        # A secret-shaped filename is an error wherever it is, .dev/ included: a key sitting
+        # in scratch space is still a key sitting in the grant.
+        if not path.is_dir() or path.is_symlink():
+            for pattern in FORBIDDEN_FILE_RE:
+                if pattern.search(path.name):
+                    rep.error(path, "looks like a secret or key file and must not be here")
+                    break
+        # The remaining rules are about what gets deployed, so they skip untracked scratch.
+        if rel.parts and rel.parts[0] in UNTRACKED_DIRS:
+            continue
         if path.is_symlink():
             rep.error(path, "is a symlink (profile load paths are mounted read-only; "
                             "symlinks do not resolve the same way inside the sandbox)")
             continue
         if path.is_dir():
             continue
-        for pattern in FORBIDDEN_FILE_RE:
-            if pattern.search(path.name):
-                rep.error(path, "looks like a secret or key file and must not be committed")
-                break
         try:
             size = path.stat().st_size
         except OSError:
@@ -318,6 +328,13 @@ def check_skills(root: Path, rep: Report) -> None:
             continue
         if not entry.is_dir():
             continue
+        # Skills are one level deep: skills/<name>/SKILL.md. A SKILL.md any deeper is not
+        # loaded, so it is a skill that silently does nothing.
+        for nested in sorted(entry.rglob("SKILL.md")):
+            if nested.parent != entry:
+                rep.error(nested, "is a nested skill; skills are one level deep "
+                                  "(skills/<name>/SKILL.md) and this one is not loaded")
+
         skill_md = entry / "SKILL.md"
         if not skill_md.is_file():
             rep.error(skill_md, "is missing (every skill directory needs a SKILL.md)")
