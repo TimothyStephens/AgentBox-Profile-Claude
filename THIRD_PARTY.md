@@ -11,9 +11,15 @@ the vendored copy. Re-verify the same way after any re-sync.
 - Source: https://github.com/humanlayer/skills — `plugins/show-me/skills/show-me`
 - Commit: `4d69d20f6e9b57b4fcf0d501ccfb1be961f0f329`
 - License: MIT (`skills/show-me/LICENSE`, identical to upstream's root `LICENSE`)
-- Local changes: **none.** `SKILL.md` is byte-identical to upstream at that commit. The task
-  described local changes recorded in a frontmatter comment; there is no such comment, and the
-  diff is empty, so there is nothing to record.
+- Local changes: two, both because sessions run in a sandbox with no display. Upstream is
+  otherwise byte-identical at that commit.
+  1. The HTML-artifact bullet ("For a visual UI, ...") used to end `Then open it for the user:`
+     followed by a `Bash(open path/to/show-me-{description}.html)` block. macOS `open` does not
+     exist in the sandbox and there is nothing to open onto. It now saves the file to
+     `.dev/show-me/show-me-{description}.html` and hands the user that path instead.
+  2. A paragraph was added under `### guidance` noting that the terminal renders Mermaid as
+     source text, so the plain-text views are usually the better choice and a diagram that must
+     be seen rendered belongs in the HTML file.
 
 ## ub-mode
 
@@ -41,6 +47,12 @@ curl -sSL https://raw.githubusercontent.com/<owner>/<repo>/<new-commit>/<path>/S
   -o skills/<name>/SKILL.md
 ```
 
-Then update the commit above, note any local changes you are deliberately keeping, and run
-`./build.sh check`. Prefer carrying zero local changes; if you must keep one, put it in a
-`comments:` key in the frontmatter so the next re-sync surfaces the conflict.
+That overwrites local changes, so diff before you commit and re-apply the ones listed above:
+
+```
+git diff -- skills/<name>/SKILL.md
+```
+
+Then update the commit here, re-list the local changes you kept, and run `./build.sh check`.
+Prefer carrying zero local changes. Record the ones you keep in this file and nowhere else —
+the skills' frontmatter stays free of bookkeeping, so it keeps diffing cleanly against upstream.
