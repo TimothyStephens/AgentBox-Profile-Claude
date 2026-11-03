@@ -140,10 +140,38 @@ printf -- '---\nname: Bad_Name\ndescription: Use when testing.\n---\n\nBody.\n' 
   > "$d/skills/Bad_Name/SKILL.md"
 expect_error "skill name bad characters" "$d" 'does not match ^[a-z0-9][a-z0-9-]{0,63}$'
 
+# Every frontmatter key Claude Code / OMP document for skills, in one file.
 d="$(fixture)"
-printf -- '---\nname: sample-skill\ndescription: Use when testing.\nmodel: opus\n---\n\nB.\n' \
+cat > "$d/skills/sample-skill/SKILL.md" <<'SKILL'
+---
+name: sample-skill
+description: Use when the test suite needs every documented frontmatter key at once.
+license: MIT
+version: 0.1.0
+metadata:
+  author: fixture
+allowed-tools: Read, Grep
+disallowed-tools: WebFetch
+tools: Read
+model: opus
+argument-hint: [path]
+disable-model-invocation: true
+user-invocable: false
+hide: true
+context: fork
+agent: Explore
+comments: A local convention, not a Claude Code key.
+---
+
+Body.
+SKILL
+expect_clean "documented frontmatter keys pass" "$d"
+
+# An undocumented key warns; it must not fail the run.
+d="$(fixture)"
+printf -- '---\nname: sample-skill\ndescription: Use when testing.\ncolour: blue\n---\n\nB.\n' \
   > "$d/skills/sample-skill/SKILL.md"
-expect_error "skill unknown frontmatter key" "$d" "unknown key(s) 'model'"
+expect_warning "undocumented frontmatter key warns" "$d" "undocumented key(s) 'colour'"
 
 echo "== agents"
 d="$(fixture)"

@@ -60,7 +60,38 @@ REQUIRED = [
 ]
 
 SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
-SKILL_KEYS = {"name", "description", "disable-model-invocation", "comments"}
+
+# Frontmatter keys Claude Code and the official marketplace document for skills. An
+# undocumented key only warns: Claude Code adds keys faster than this list can track, and a
+# key this validator has not heard of is a reason to look, not a reason to block a deploy.
+# Sources, both readable from a session at
+# /run/agentbox/claude/plugins/marketplaces/claude-plugins-official:
+#   claude-code-setup/skills/claude-automation-recommender/references/skills-reference.md
+#     -> name, description, disable-model-invocation, user-invocable, allowed-tools,
+#        context, agent
+#   plugin-dev/skills/command-development/references/frontmatter-reference.md
+#     -> model, argument-hint
+#   keys used by shipped marketplace skills -> version, license, disallowed-tools, tools
+SKILL_KEYS = {
+    "name",
+    "description",
+    "license",
+    "version",
+    "metadata",
+    "allowed-tools",
+    "disallowed-tools",
+    "tools",
+    "model",
+    "argument-hint",
+    "disable-model-invocation",
+    "user-invocable",
+    "hide",
+    "context",
+    "agent",
+    # Not a Claude Code key: a local convention for noting why a vendored skill differs from
+    # upstream. THIRD_PARTY.md is the place for that, so nothing here uses it.
+    "comments",
+}
 
 PLUGIN_NAME_RE = re.compile(r"^[^@\s]+@[^@\s]+$")
 HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -148,7 +179,10 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str] | None, str | None]:
         key = key.strip()
         value = value.strip()
         i += 1
-        if value in (">", "|", ">-", "|-", ">+", "|+"):
+        # A block scalar (`key: >`) or a nested mapping (`key:` with indented lines under it)
+        # continues over the following indented lines. Flatten them into the value: these
+        # checks only ask whether a key is present and, for scalars, what it says.
+        if value in ("", ">", "|", ">-", "|-", ">+", "|+"):
             block: list[str] = []
             while i < end and (not lines[i].strip() or lines[i][:1] in (" ", "\t")):
                 block.append(lines[i].strip())
@@ -293,8 +327,10 @@ def check_skills(root: Path, rep: Report) -> None:
                 rep.error(skill_md, f"frontmatter is missing required key {key!r}")
         unknown = sorted(set(front) - SKILL_KEYS)
         if unknown:
-            rep.error(skill_md, "frontmatter has unknown key(s) "
-                                + ", ".join(repr(k) for k in unknown))
+            rep.warn(skill_md, "frontmatter has undocumented key(s) "
+                               + ", ".join(repr(k) for k in unknown)
+                               + "; check it is not a typo, then add it to SKILL_KEYS "
+                                 "in tools/check.py")
         name = front.get("name", "")
         if name:
             if not SKILL_NAME_RE.match(name):
