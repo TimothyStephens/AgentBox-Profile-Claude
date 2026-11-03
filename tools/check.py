@@ -42,7 +42,14 @@ TOP_LEVEL = {
     # not part of the profile, but expected in a working tree
     ".git",
     ".gitignore",
+    # Scratch space for EGM artifacts and show-me's HTML files, as in the Claude repo.
+    # Gitignored (.gitignore is checked below) and skipped by the file walk, since nothing
+    # in it reaches a session.
+    ".dev",
 }
+
+# Directories whose contents are not part of the profile and are not walked.
+SKIP_DIRS = {".git", ".dev"}
 
 # Entries that must exist. Containerfile is optional (it is a personal tool layer).
 REQUIRED = [
@@ -230,7 +237,7 @@ def check_layout(root: Path, rep: Report) -> None:
 def check_files(root: Path, rep: Report) -> None:
     for path in sorted(root.rglob("*")):
         rel = path.relative_to(root)
-        if rel.parts and rel.parts[0] == ".git":
+        if rel.parts and rel.parts[0] in SKIP_DIRS:
             continue
         if path.is_symlink():
             rep.error(path, "is a symlink (profile load paths are mounted read-only; "

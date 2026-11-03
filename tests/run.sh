@@ -88,6 +88,18 @@ expect_error "CLAUDE.md missing" "$d" "CLAUDE.md: is required but missing"
 d="$(fixture)"; printf 'build\n' > "$d/.gitignore"
 expect_error ".dev not gitignored" "$d" "does not ignore .dev"
 
+# .dev is scratch space (EGM artifacts, show-me HTML). Allowed at the top level, and its
+# contents are not profile content, so the file walk skips them.
+d="$(fixture)"; mkdir -p "$d/.dev/show-me"
+printf '<html></html>\n' > "$d/.dev/show-me/show-me-example.html"
+expect_clean ".dev is allowed at the top level" "$d"
+
+d="$(fixture)"; mkdir -p "$d/.dev/docs"
+head -c 1100000 /dev/zero > "$d/.dev/docs/big.bin"
+: > "$d/.dev/docs/.env"
+ln -s ../../CLAUDE.md "$d/.dev/docs/link.md"
+expect_clean ".dev contents are not scanned" "$d"
+
 echo "== files"
 d="$(fixture)"; ln -s CLAUDE.md "$d/skills/sample-skill/shortcut.md"
 expect_error "symlink" "$d" "is a symlink"

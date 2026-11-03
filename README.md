@@ -19,6 +19,7 @@ Tim's Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launche
 | `tools/check.py` | The validator `check` runs (python3 ≥ 3.11, stdlib only) | — |
 | `tests/run.sh` | Tests for the validator and the host guards | — |
 | `THIRD_PARTY.md` | Source, commit, license and local changes of vendored skills | — |
+| `.dev/` | Scratch space: EGM artifacts (`.dev/docs`), show-me's HTML files | Gitignored; never deployed |
 
 `skills/README.md`, `agents/README.md`, and `commands/README.md` each state the file format and
 the frontmatter Claude Code expects. Read those before adding anything.
@@ -39,7 +40,10 @@ edit  ->  ./build.sh check  ->  git commit  ->  ./build.sh all   (Tim, on the ho
 
 `./build.sh check` is offline and runs anywhere, including inside a session sandbox. It prints
 every problem as `path: problem` and exits 1 if any of them is an error. Warnings print the same
-way and do not fail the run.
+way and do not fail the run. It rejects any top-level entry it does not recognize, so adding a
+directory here means adding it to `TOP_LEVEL` in `tools/check.py` too. `.dev/` is allowed and
+its contents are not scanned — it is gitignored scratch space and nothing in it reaches a
+session.
 
 `./build.sh status` runs anywhere too: it compares the live profile's commit against this repo's
 HEAD, lists the plugin pins, and reports whether `ab` and its subcommands are available.
