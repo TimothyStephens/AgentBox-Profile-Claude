@@ -1,0 +1,10 @@
+ARG BASE
+FROM ${BASE}
+
+RUN set -eux; \
+    curl -fsSL -o /tmp/tool.tgz https://example.invalid/tool-1.0.tgz; \
+    echo "95aaa8e89473f5421114f2787c13ae0ec6e11ebbd1a13a1bd6fcf63420f8073f  /tmp/tool.tgz" \
+      | sha256sum -c -; \
+    rm -f /tmp/tool.tgz
+
+ENV EDITOR=nvim

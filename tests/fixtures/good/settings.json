@@ -1,0 +1,6 @@
+{
+  "includeCoAuthoredBy": true,
+  "env": {
+    "EDITOR": "nvim"
+  }
+}
