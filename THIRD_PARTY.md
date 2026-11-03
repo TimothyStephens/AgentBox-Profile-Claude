@@ -28,8 +28,16 @@ the vendored copy. Re-verify the same way after any re-sync.
   this commit — upstream keeps the skill at the top level. Corrected here.)
 - Commit: `3da62bf3fcfd2034de41f30d920d2739e566171f`
 - License: MIT (`skills/ub-mode/LICENSE`, identical to upstream's root `LICENSE`)
-- Local changes: **none.** `SKILL.md` is byte-identical to upstream at that commit, and it
-  carries no frontmatter comment, for the same reason as above.
+- Local changes: one. Upstream is otherwise byte-identical at that commit.
+  1. Added `disable-model-invocation: true` to the frontmatter, so the skill loads only when
+     Tim asks for it — which matches its own description, "Use when the user runs /ub-mode or
+     asks for the reduced principles". Nothing else in the file changed.
+
+     Note on the reason this was requested: the key does not hide the skill. Per OMP's
+     frontmatter reference, `disable-model-invocation: true` means user-invocable only (the
+     `/ub-mode` command still appears in the menu and Claude can no longer load it on its own);
+     `hide: true` is the separate key that keeps a skill out of the menu. The effect asked for
+     — Claude not pulling these principles in uninvited — is what this key does give.
 
 ## mags-manifest-design
 
