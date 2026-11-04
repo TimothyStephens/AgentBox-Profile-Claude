@@ -32,6 +32,9 @@ Summarize the state of $1, using:
 In the body: `$ARGUMENTS` is everything the user typed, `$1`/`$2` are positional,
 ``!`cmd` `` inlines a shell command's output, and `@path` inlines a file.
 
-`./build.sh check` only requires that each command file be non-empty, and ignores this README.
+`./build.sh check` requires that each command file be non-empty. It also requires that
+`commands/` hold only loadable items: a `README*` or any non-`.md` file there is an error.
+Every `.md` file under `commands/` becomes a slash command, so a `README.md` left here would
+show up as `/README`. That is why this file lives in `docs/` instead.
 
-This directory is empty apart from this README — nothing here yet.
+There is no `commands/` directory yet — nothing here. Create it when you add the first command.

@@ -49,6 +49,10 @@ it cites where each current key is documented).
 changes to a vendored skill belong in `THIRD_PARTY.md`, so the skill keeps diffing cleanly
 against upstream.
 
+`skills/` itself holds only skill directories: a plain file sitting directly in `skills/` is an
+error, since nothing loads it. Inside `skills/<name>/` anything goes — references, scripts, a
+`LICENSE`, a `README.md` of its own. That is why this file lives in `docs/` instead.
+
 ## Vendored skills
 
 `show-me`, `ub-mode`, and `mags-manifest-design` come from upstream repos; see `THIRD_PARTY.md`

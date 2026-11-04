@@ -12,6 +12,7 @@ Tim's Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launche
 | `skills/` | One directory per skill, each with a `SKILL.md` | Mounted **read-only** |
 | `agents/` | Sub-agent definitions, one `.md` each | Mounted **read-only** |
 | `commands/` | Slash commands, one `.md` each | Mounted **read-only** |
+| `docs/` | Documentation for each load directory, `docs/<dir>.md` | Not loaded — that is the point |
 | `settings.json` | Durable harness settings (permissions, hooks, env) | **Copied fresh** at each session start |
 | `plugins.toml` | Plugin declarations, pinned by commit | Installed by `ab profile install claude` |
 | `Containerfile` | Personal tool layer on the agentbox-claude image | Built by `ab image build claude` |
@@ -22,8 +23,15 @@ Tim's Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launche
 | `PARITY.md` | What must stay identical to the OMP profile repo, and what may differ | — |
 | `.dev/` | Scratch space: EGM artifacts (`.dev/docs`), show-me's HTML files | Gitignored; never deployed |
 
-`skills/README.md`, `agents/README.md`, and `commands/README.md` each state the file format and
-the frontmatter Claude Code expects. Read those before adding anything.
+[`docs/skills.md`](docs/skills.md), [`docs/agents.md`](docs/agents.md), and
+[`docs/commands.md`](docs/commands.md) each state the file format and the frontmatter Claude
+Code expects. Read those before adding anything.
+
+They live in `docs/` rather than inside the directories they describe because the load
+directories are loaded, not read: every `.md` under `commands/` becomes a slash command, so a
+`commands/README.md` showed up as `/README`. `check` now errors on a `README*` in any load
+directory. `agents/` and `commands/` currently do not exist — there is nothing to load yet;
+create one when you add its first item.
 
 This repo has a sibling, `agentbox-profile-omp`, and the two must match at a high level.
 `PARITY.md` is the contract: it is byte-identical in both repos and says what is shared (the

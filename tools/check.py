@@ -32,6 +32,7 @@ TOP_LEVEL = {
     "skills",
     "agents",
     "commands",
+    "docs",
     "plugins.toml",
     "Containerfile",
     "build.sh",
@@ -55,13 +56,13 @@ SKIP_DIRS = {".git"}
 # Walked, but only the secret-shaped-filename rule applies: not a tracked path.
 UNTRACKED_DIRS = {".dev"}
 
-# Entries that must exist. Containerfile is optional (it is a personal tool layer).
+# Entries that must exist. Containerfile is optional (it is a personal tool layer), and so are
+# agents/ and commands/: an empty load directory cannot be committed, and an absent one is
+# indistinguishable from an empty one once agentbox has mounted it.
 REQUIRED = [
     "CLAUDE.md",
     "settings.json",
     "skills",
-    "agents",
-    "commands",
     "plugins.toml",
     "build.sh",
     "tools/check.py",
@@ -69,6 +70,13 @@ REQUIRED = [
     "THIRD_PARTY.md",
     "README.md",
 ]
+
+# Directories agentbox mounts and the harness loads wholesale. Anything in them is loaded, so
+# they hold only loadable items: documentation goes in docs/<dir>.md instead.
+#   skills/  -- one directory per skill; a plain file directly inside it loads as nothing
+#   agents/, commands/  -- one .md per item, nested directories namespacing them
+SKILL_LOAD_DIR = "skills"
+FLAT_LOAD_DIRS = ("agents", "commands")
 
 SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 
@@ -120,9 +128,6 @@ FORBIDDEN_FILE_RE = [
 
 MAX_FILE_BYTES = 1024 * 1024
 CLAUDE_MD_WARN_LINES = 150
-
-# READMEs document a directory; they are not agents or commands.
-DOC_FILES = {"README.md"}
 
 
 # ---------------------------------------------------------------------------
@@ -322,10 +327,6 @@ def check_skills(root: Path, rep: Report) -> None:
     if not skills.is_dir():
         return
     for entry in sorted(skills.iterdir(), key=lambda p: p.name):
-        if entry.is_file():
-            if entry.name not in DOC_FILES:
-                rep.error(entry, "is a loose file in skills/; each skill needs its own directory")
-            continue
         if not entry.is_dir():
             continue
         # Skills are one level deep: skills/<name>/SKILL.md. A SKILL.md any deeper is not
@@ -370,8 +371,6 @@ def check_agents(root: Path, rep: Report) -> None:
     if not agents.is_dir():
         return
     for path in sorted(agents.rglob("*.md")):
-        if path.name in DOC_FILES:
-            continue
         text = read_text(path, rep)
         if text is None:
             continue
@@ -389,13 +388,51 @@ def check_commands(root: Path, rep: Report) -> None:
     if not commands.is_dir():
         return
     for path in sorted(commands.rglob("*.md")):
-        if path.name in DOC_FILES:
-            continue
         text = read_text(path, rep)
         if text is None:
             continue
         if not text.strip():
             rep.error(path, "is empty")
+
+
+def check_load_dirs(root: Path, rep: Report) -> None:
+    """Load directories hold only loadable items.
+
+    The harness loads whatever it finds in them, so a documentation file becomes a command or
+    a skill. commands/README.md really did show up as /README. Documentation lives in
+    docs/<dir>.md, which nothing mounts.
+    """
+    readme_problem = ("is documentation in a load directory, where the harness loads it as an "
+                      "item; move it to docs/<dir>.md")
+
+    skills = root / SKILL_LOAD_DIR
+    if skills.is_dir():
+        for entry in sorted(skills.iterdir(), key=lambda p: p.name):
+            if entry.is_dir() and not entry.is_symlink():
+                continue
+            # Inside skills/<name>/ anything goes; directly in skills/ nothing is loadable.
+            if entry.name.startswith("README"):
+                rep.error(entry, readme_problem)
+            else:
+                rep.error(entry, "is a plain file directly in skills/, where nothing loads it; "
+                                 "each skill needs its own skills/<name>/ directory")
+
+    for name in FLAT_LOAD_DIRS:
+        load_dir = root / name
+        if not load_dir.is_dir():
+            continue
+        # Nested directories namespace items (commands/git/sync.md -> /git:sync), so a README
+        # anywhere under here loads as an item.
+        for path in sorted(load_dir.rglob("README*")):
+            rep.error(path, readme_problem)
+        for entry in sorted(load_dir.iterdir(), key=lambda p: p.name):
+            if entry.is_dir() and not entry.is_symlink():
+                continue
+            if entry.name.startswith("README"):
+                continue  # already reported above
+            if entry.suffix != ".md":
+                rep.error(entry, f"is not a .md file, so {name}/ cannot load it; "
+                                 f"documentation goes in docs/{name}.md")
 
 
 def load_plugins(root: Path) -> list[dict]:
@@ -500,6 +537,7 @@ CHECKS = (
     check_files,
     check_claude_md,
     check_settings,
+    check_load_dirs,
     check_skills,
     check_agents,
     check_commands,

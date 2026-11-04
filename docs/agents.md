@@ -28,6 +28,8 @@ You are a ... Your job is to ...
 | `tools` | no | Comma-separated allow-list. Omit to inherit every tool. Narrow it for read-only agents. |
 | `model` | no | `haiku`, `sonnet`, `opus`, or `inherit`. |
 
-`./build.sh check` requires `name` and `description` and ignores this README.
+`./build.sh check` requires `name` and `description`. It also requires that `agents/` hold only
+loadable items: a `README*` or any non-`.md` file there is an error, because Claude Code tries
+to load whatever it finds. That is why this file lives in `docs/` instead.
 
-This directory is empty apart from this README — nothing here yet.
+There is no `agents/` directory yet — nothing here. Create it when you add the first agent.
