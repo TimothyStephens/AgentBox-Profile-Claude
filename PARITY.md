@@ -13,7 +13,7 @@
   documented frontmatter keys pass, unknown keys warn; no symlinks or files over 1 MB in
   tracked paths; .env*, *.pem, id_* are errors anywhere, .dev/ included; .dev/ is otherwise
   skipped (it is gitignored and never deployed); only the documented top-level entries.
-- tests: every shared rule has a pass case and a fail case, with the same names in both repos.
+- tests: every shared rule has a pass case and a fail case.
 - Allowed differences: the instruction file name; the "## This harness" section; harness
   directories (Claude: settings.json; OMP: rules/, prompts/); the frontmatter key sets; the
   live path and the ab agent name; file types a harness loads beyond .md (OMP: rules/*.mdc).
