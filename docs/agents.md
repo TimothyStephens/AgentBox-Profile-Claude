@@ -29,7 +29,8 @@ You are a ... Your job is to ...
 | `model` | no | `haiku`, `sonnet`, `opus`, or `inherit`. |
 
 `./build.sh check` requires `name` and `description`. It also requires that `agents/` hold only
-loadable items: a `README*` or any non-`.md` file there is an error, because Claude Code tries
-to load whatever it finds. That is why this file lives in `docs/` instead.
+loadable items: a `README*` at any depth (in any case) or any non-`.md` file directly in
+`agents/` is an error, because Claude Code tries to load whatever it finds. That is why this
+file lives in `docs/` instead.
 
 There is no `agents/` directory yet — nothing here. Create it when you add the first agent.

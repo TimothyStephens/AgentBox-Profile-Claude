@@ -29,9 +29,10 @@ Code expects. Read those before adding anything.
 
 They live in `docs/` rather than inside the directories they describe because the load
 directories are loaded, not read: every `.md` under `commands/` becomes a slash command, so a
-`commands/README.md` showed up as `/README`. `check` now errors on a `README*` in any load
-directory. `agents/` and `commands/` currently do not exist — there is nothing to load yet;
-create one when you add its first item.
+`commands/README.md` showed up as `/README`. `check` now errors on a `README*` at any depth in
+any load directory, whatever its case. `agents/` and `commands/` currently do not exist —
+every load directory except `skills/` is optional, and absent means empty; create one when you
+add its first item.
 
 This repo has a sibling, `agentbox-profile-omp`, and the two must match at a high level.
 `PARITY.md` is the contract: it is byte-identical in both repos and says what is shared (the

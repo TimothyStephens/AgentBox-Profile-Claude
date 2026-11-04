@@ -50,8 +50,11 @@ changes to a vendored skill belong in `THIRD_PARTY.md`, so the skill keeps diffi
 against upstream.
 
 `skills/` itself holds only skill directories: a plain file sitting directly in `skills/` is an
-error, since nothing loads it. Inside `skills/<name>/` anything goes — references, scripts, a
-`LICENSE`, a `README.md` of its own. That is why this file lives in `docs/` instead.
+error, since nothing loads it. Inside `skills/<name>/` put whatever the skill needs —
+references, scripts, a `LICENSE` — with one exception: no `README*` file, at any depth and in
+any case. Documentation never sits inside a load directory, which is why this file lives in
+`docs/` instead. If a vendored skill ships a README, drop it and summarize it in
+`THIRD_PARTY.md` under that skill's local changes.
 
 ## Vendored skills
 

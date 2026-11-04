@@ -56,9 +56,10 @@ SKIP_DIRS = {".git"}
 # Walked, but only the secret-shaped-filename rule applies: not a tracked path.
 UNTRACKED_DIRS = {".dev"}
 
-# Entries that must exist. Containerfile is optional (it is a personal tool layer), and so are
-# agents/ and commands/: an empty load directory cannot be committed, and an absent one is
-# indistinguishable from an empty one once agentbox has mounted it.
+# Entries that must exist. Containerfile is optional (it is a personal tool layer), and per
+# PARITY.md every load directory except skills/ is optional too: an empty one cannot be
+# committed, and an absent one is indistinguishable from an empty one once agentbox has
+# mounted it.
 REQUIRED = [
     "CLAUDE.md",
     "settings.json",
@@ -75,8 +76,10 @@ REQUIRED = [
 # they hold only loadable items: documentation goes in docs/<dir>.md instead.
 #   skills/  -- one directory per skill; a plain file directly inside it loads as nothing
 #   agents/, commands/  -- one .md per item, nested directories namespacing them
+# OMP's rules/ and prompts/ belong in FLAT_LOAD_DIRS there, rules/ loading .mdc as well.
 SKILL_LOAD_DIR = "skills"
-FLAT_LOAD_DIRS = ("agents", "commands")
+FLAT_LOAD_DIRS = {"agents": {".md"}, "commands": {".md"}}
+LOAD_DIRS = (SKILL_LOAD_DIR, *FLAT_LOAD_DIRS)
 
 SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 
@@ -395,6 +398,10 @@ def check_commands(root: Path, rep: Report) -> None:
             rep.error(path, "is empty")
 
 
+def is_readme(name: str) -> bool:
+    return name.upper().startswith("README")
+
+
 def check_load_dirs(root: Path, rep: Report) -> None:
     """Load directories hold only loadable items.
 
@@ -405,33 +412,41 @@ def check_load_dirs(root: Path, rep: Report) -> None:
     readme_problem = ("is documentation in a load directory, where the harness loads it as an "
                       "item; move it to docs/<dir>.md")
 
+    # No README* at any depth, in any load directory. Nested directories namespace items
+    # (commands/git/sync.md -> /git:sync), and a README beside a SKILL.md is still
+    # documentation sitting inside a load directory.
+    for name in LOAD_DIRS:
+        load_dir = root / name
+        if not load_dir.is_dir():
+            continue
+        for path in sorted(load_dir.rglob("*")):
+            if path.is_dir() and not path.is_symlink():
+                continue
+            if is_readme(path.name):
+                rep.error(path, readme_problem)
+
     skills = root / SKILL_LOAD_DIR
     if skills.is_dir():
         for entry in sorted(skills.iterdir(), key=lambda p: p.name):
             if entry.is_dir() and not entry.is_symlink():
                 continue
-            # Inside skills/<name>/ anything goes; directly in skills/ nothing is loadable.
-            if entry.name.startswith("README"):
-                rep.error(entry, readme_problem)
-            else:
-                rep.error(entry, "is a plain file directly in skills/, where nothing loads it; "
-                                 "each skill needs its own skills/<name>/ directory")
+            if is_readme(entry.name):
+                continue  # already reported above
+            rep.error(entry, "is a plain file directly in skills/, where nothing loads it; "
+                             "each skill needs its own skills/<name>/ directory")
 
-    for name in FLAT_LOAD_DIRS:
+    for name, loadable in FLAT_LOAD_DIRS.items():
         load_dir = root / name
         if not load_dir.is_dir():
             continue
-        # Nested directories namespace items (commands/git/sync.md -> /git:sync), so a README
-        # anywhere under here loads as an item.
-        for path in sorted(load_dir.rglob("README*")):
-            rep.error(path, readme_problem)
         for entry in sorted(load_dir.iterdir(), key=lambda p: p.name):
             if entry.is_dir() and not entry.is_symlink():
                 continue
-            if entry.name.startswith("README"):
+            if is_readme(entry.name):
                 continue  # already reported above
-            if entry.suffix != ".md":
-                rep.error(entry, f"is not a .md file, so {name}/ cannot load it; "
+            if entry.suffix not in loadable:
+                wanted = " or ".join(sorted(loadable))
+                rep.error(entry, f"is not a {wanted} file, so {name}/ cannot load it; "
                                  f"documentation goes in docs/{name}.md")
 
 

@@ -33,8 +33,9 @@ In the body: `$ARGUMENTS` is everything the user typed, `$1`/`$2` are positional
 ``!`cmd` `` inlines a shell command's output, and `@path` inlines a file.
 
 `./build.sh check` requires that each command file be non-empty. It also requires that
-`commands/` hold only loadable items: a `README*` or any non-`.md` file there is an error.
-Every `.md` file under `commands/` becomes a slash command, so a `README.md` left here would
-show up as `/README`. That is why this file lives in `docs/` instead.
+`commands/` hold only loadable items: a `README*` at any depth (in any case) or any non-`.md`
+file directly in `commands/` is an error. Every `.md` file under `commands/` becomes a slash
+command, so a `README.md` left here would show up as `/README`, and `commands/git/README.md`
+as `/git:README`. That is why this file lives in `docs/` instead.
 
 There is no `commands/` directory yet — nothing here. Create it when you add the first command.

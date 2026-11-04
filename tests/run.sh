@@ -105,29 +105,50 @@ cp "$GOOD/skills/sample-skill/SKILL.md" "$d/skills/sample-skill/nested/SKILL.md"
 expect_error "skills one level deep: fail" "$d" "is a nested skill"
 
 echo "== shared: load directories hold only loadable items"
-# Documentation lives in docs/<dir>.md, so the load directories stay loadable-only.
+# Documentation lives in docs/<dir>.md, so the load directories stay loadable-only. Nested
+# items and supporting files beside a SKILL.md are loadable content and stay allowed.
 d="$(fixture)"; mkdir -p "$d/commands/git"
 printf -- '---\ndescription: Nested fixture command.\n---\n\nDo it.\n' \
   > "$d/commands/git/sync.md"
-printf 'Anything goes inside a skill directory.\n' > "$d/skills/sample-skill/README.md"
+mkdir -p "$d/skills/sample-skill/references"
+printf 'MIT\n' > "$d/skills/sample-skill/LICENSE"
+printf 'Reference material.\n' > "$d/skills/sample-skill/references/notes.md"
 expect_clean "load directories hold only loadable items: pass" "$d"
+
+# No README* at any depth, in any load directory, whatever its case.
 for dir in skills agents commands; do
   d="$(fixture)"; printf '# %s/\n' "$dir" > "$d/$dir/README.md"
   expect_error "load directories hold only loadable items: fail (README in $dir/)" "$d" \
     "$dir/README.md: is documentation in a load directory"
 done
+for dir in skills agents commands; do
+  d="$(fixture)"; printf '# %s/\n' "$dir" > "$d/$dir/readme.md"
+  expect_error "load directories hold only loadable items: fail (readme.md in $dir/)" "$d" \
+    "$dir/readme.md: is documentation in a load directory"
+done
 d="$(fixture)"; mkdir -p "$d/commands/git"
 printf '# nested\n' > "$d/commands/git/README.md"
 expect_error "load directories hold only loadable items: fail (README nested in commands/)" \
   "$d" "commands/git/README.md: is documentation in a load directory"
+d="$(fixture)"; printf '# nested\n' > "$d/skills/sample-skill/README.md"
+expect_error "load directories hold only loadable items: fail (README nested in skills/)" \
+  "$d" "skills/sample-skill/README.md: is documentation in a load directory"
+
 for dir in agents commands; do
   d="$(fixture)"; printf 'notes\n' > "$d/$dir/notes.txt"
-  expect_error "load directories hold only loadable items: fail (non-.md in $dir/)" "$d" \
+  expect_error "load directories hold only loadable items: fail (non-loadable in $dir/)" "$d" \
     "$dir/notes.txt: is not a .md file"
 done
 d="$(fixture)"; printf 'loose\n' > "$d/skills/loose.md"
 expect_error "load directories hold only loadable items: fail (plain file in skills/)" "$d" \
   "skills/loose.md: is a plain file directly in skills/"
+
+# Every load directory except skills/ is optional: absent = empty.
+d="$(fixture)"; rm -rf "$d/agents" "$d/commands"
+expect_clean "load directories other than skills/ are optional: pass" "$d"
+d="$(fixture)"; rm -rf "$d/skills"
+expect_error "load directories other than skills/ are optional: fail (no skills/)" "$d" \
+  "skills: is required but missing"
 
 echo "== shared: skill name == dir name"
 expect_clean "skill name == dir name: pass" "$(fixture)"
