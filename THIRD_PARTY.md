@@ -48,11 +48,14 @@ the vendored copy, except where noted.
 ## mags-manifest-design
 
 - Source URL: https://github.com/TimothyStephens/MAGS-CodeDev
-- Path: `mags-codedev-extension/skills/mags-manifest-design`
-- Commit: `63e0271ae259e973123984fa065b6d00572a277a`
+- Path: `skills/mags-manifest-design/SKILL.md`
+- Commit: `<MAGS_SHA>` — **unresolved placeholder, not a commit.** It arrived as this literal
+  token and the repo is private, so the sandbox could not look the sha up. Replace it before
+  deploying; `./build.sh check` does not validate this field and will not catch it.
 - License: Tim's own project
-- Local changes: none. Not diffed against upstream — the repo is private, so the sandbox's
-  egress could not reach it. The other two were diffed successfully.
+- Local changes: none — `SKILL.md` is the vendored file copied unchanged. Not diffed against
+  upstream: the repo is private, so the sandbox's egress could not reach it. The other two
+  entries were diffed successfully.
 
 ## Re-syncing a vendored skill
 
