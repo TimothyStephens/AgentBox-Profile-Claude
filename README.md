@@ -12,7 +12,7 @@ Tim's Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launche
 | `skills/` | One directory per skill, each with a `SKILL.md` | Mounted **read-only** |
 | `agents/` | Sub-agent definitions, one `.md` each | Mounted **read-only** |
 | `commands/` | Slash commands, one `.md` each | Mounted **read-only** |
-| `docs/` | Documentation for each load directory, `docs/<dir>.md` | Not loaded — that is the point |
+| `docs/` | Documentation for each load directory, `docs/<dir>.md`, and `docs/decisions.md` | Not loaded — that is the point |
 | `settings.json` | Durable harness settings (permissions, hooks, env) | **Copied fresh** at each session start |
 | `plugins.toml` | Plugin declarations, pinned by commit | Installed by `ab profile install claude` |
 | `Containerfile` | Personal tool layer on the agentbox-claude image | Built by `ab image build claude` |
@@ -20,7 +20,6 @@ Tim's Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launche
 | `tools/check.py` | The validator `check` runs (python3 ≥ 3.11, stdlib only) | — |
 | `tests/run.sh` | Tests for the validator and the host guards | — |
 | `THIRD_PARTY.md` | Source, commit, license and local changes of vendored skills | — |
-| `PARITY.md` | What must stay identical to the OMP profile repo, and what may differ | — |
 | `.dev/` | Scratch space: EGM artifacts (`.dev/docs`), show-me's HTML files | Gitignored; never deployed |
 
 [`docs/skills.md`](docs/skills.md), [`docs/agents.md`](docs/agents.md), and
@@ -34,12 +33,10 @@ any load directory, whatever its case. `agents/` and `commands/` currently do no
 every load directory except `skills/` is optional, and absent means empty; create one when you
 add its first item.
 
-This repo has a sibling, `agentbox-profile-omp`, and the two must match at a high level.
-`PARITY.md` is the contract: it is byte-identical in both repos and says what is shared (the
-instruction-file core block, `build.sh`'s commands and exit codes, the `THIRD_PARTY.md` format,
-the `Containerfile`, the `plugins.toml` format, this README's section order, the shared `check`
-rules and their test case names) and what may differ. Change anything shared here and the
-sibling needs the same change.
+This repo has a sibling, `agentbox-profile-omp`, for OMP. `build.sh`, the `Containerfile`, the
+shared core block of `CLAUDE.md` and the shared `check` rules are kept the same in both, and the
+test cases named `shared:` exist under the same name in both repos. Change a shared part here
+and make the same change there.
 
 Two things that are easy to get wrong:
 

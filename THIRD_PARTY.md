@@ -4,8 +4,8 @@ Skills vendored into `skills/`. Plugins are not vendored — they are declared i
 and installed by agentbox.
 
 One section per skill, the heading being its name, then these fields in this order: source URL,
-path within that repo, commit, license, local changes. `PARITY.md` makes the format shared with
-the sibling profile repo, so keep the field order when you add an entry.
+path within that repo, commit, license, local changes. The format is shared with the sibling
+profile repo, so keep the field order when you add an entry.
 
 Each entry below was verified by fetching the file from the pinned commit and diffing it against
 the vendored copy, except where noted.

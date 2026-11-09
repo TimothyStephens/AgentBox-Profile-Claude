@@ -39,7 +39,6 @@ TOP_LEVEL = {
     "tools",
     "tests",
     "THIRD_PARTY.md",
-    "PARITY.md",
     "README.md",
     # not part of the profile, but expected in a working tree
     ".git",
@@ -56,8 +55,8 @@ SKIP_DIRS = {".git"}
 # Walked, but only the secret-shaped-filename rule applies: not a tracked path.
 UNTRACKED_DIRS = {".dev"}
 
-# Entries that must exist. Containerfile is optional (it is a personal tool layer), and per
-# PARITY.md every load directory except skills/ is optional too: an empty one cannot be
+# Entries that must exist. Containerfile is optional (it is a personal tool layer), and every
+# load directory except skills/ is optional too: an empty one cannot be
 # committed, and an absent one is indistinguishable from an empty one once agentbox has
 # mounted it.
 REQUIRED = [

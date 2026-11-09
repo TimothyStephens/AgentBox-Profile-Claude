@@ -8,8 +8,8 @@
 # Each case copies tests/fixtures/good to a scratch dir, changes exactly one thing, and
 # asserts what check says about it. The good fixture and this repo must both pass clean.
 #
-# PARITY.md requires every shared check rule to have a pass case and a fail case, with the
-# same case names in both profile repos. Those are the "shared rules" section below; keep the
+# Every check rule shared with agentbox-profile-omp has a pass case and a fail case, under the
+# same case name in both profile repos. Those are the "shared rules" section below; keep the
 # names in step with agentbox-profile-omp. The "harness-specific" section is allowed to differ.
 
 set -uo pipefail
@@ -95,7 +95,7 @@ expect_exit "./build.sh check passes on the repo" 0 "check: ok" \
   env -C "$REPO" ./build.sh check
 
 # ---------------------------------------------------------------------------
-# Shared rules (PARITY.md). Same case names in both profile repos.
+# Shared rules. Same case names in both profile repos.
 # ---------------------------------------------------------------------------
 
 echo "== shared: skills one level deep"
@@ -310,7 +310,7 @@ expect_exit "build.sh: status reports a missing live profile as clonable" 0 \
   env -C "$REPO" AGENTBOX_CLAUDE_PROFILE="$TMP/no-such-profile" ./build.sh status
 
 # ---------------------------------------------------------------------------
-# Harness-specific. PARITY.md allows these to differ between the repos.
+# Harness-specific. These differ between the repos.
 # ---------------------------------------------------------------------------
 
 echo "== harness: instruction file"

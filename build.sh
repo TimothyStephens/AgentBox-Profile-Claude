@@ -12,6 +12,7 @@
 set -uo pipefail
 
 REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROFILE="claude"
 LIVE="${AGENTBOX_CLAUDE_PROFILE:-$HOME/.config/agentbox/claude/profile}"
 
 say()  { printf '%s\n' "$*"; }
@@ -191,16 +192,16 @@ cmd_install() {
     warn "build.sh install: this ab has no 'profile install' command yet."
     exit 3
   fi
-  say "== install: ab profile install claude"
-  ab profile install claude || return 1
+  say "== install: ab profile install $PROFILE"
+  ab profile install "$PROFILE" || return 1
 
   if [[ -f "$REPO/Containerfile" ]]; then
     if ! ab_has "image build"; then
       warn "build.sh install: Containerfile present but this ab has no 'image build' command yet."
       exit 3
     fi
-    say "== install: ab image build claude"
-    ab image build claude || return 1
+    say "== install: ab image build $PROFILE"
+    ab image build "$PROFILE" || return 1
   else
     say "install: no Containerfile, skipping image build"
   fi
