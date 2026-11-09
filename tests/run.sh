@@ -305,6 +305,9 @@ expect_exit "build.sh: exit 2 refused (unknown command)" 2 "unknown command" \
   env -C "$REPO" ./build.sh frobnicate
 expect_exit "build.sh: status runs anywhere" 0 "plugins:" \
   env -C "$REPO" ./build.sh status
+expect_exit "build.sh: status reports a missing live profile as clonable" 0 \
+  "does not exist yet; ./build.sh deploy will clone" \
+  env -C "$REPO" AGENTBOX_CLAUDE_PROFILE="$TMP/no-such-profile" ./build.sh status
 
 # ---------------------------------------------------------------------------
 # Harness-specific. PARITY.md allows these to differ between the repos.

@@ -3,7 +3,7 @@
 #
 #   ./build.sh check     offline validation of this repo          (anywhere)
 #   ./build.sh status    live profile vs this repo, plugin pins   (anywhere)
-#   ./build.sh deploy    fast-forward the live profile clone      (host only)
+#   ./build.sh deploy    clone the live profile, or fast-forward it (host only)
 #   ./build.sh install   ab profile install + ab image build      (host only)
 #   ./build.sh all       check, deploy, install; stop on failure  (host only)
 #
@@ -52,11 +52,17 @@ cmd_check() {
 
 # --- status ----------------------------------------------------------------
 
+# True if $LIVE is missing or an empty directory: deploy may clone into it.
+live_is_absent() {
+  [[ ! -e "$LIVE" ]] && return 0
+  [[ -d "$LIVE" && -z "$(ls -A -- "$LIVE" 2>/dev/null)" ]]
+}
+
 # Is $LIVE a clean clone of this repo? Sets REASON on failure.
 REASON=""
 live_is_clean_clone() {
   REASON=""
-  if [[ ! -d "$LIVE" ]]; then
+  if live_is_absent; then
     REASON="does not exist"
     return 1
   fi
@@ -110,6 +116,8 @@ cmd_status() {
     else
       say "  diverged from this repo (not an ancestor of HEAD)"
     fi
+  elif live_is_absent; then
+    say "  does not exist yet; ./build.sh deploy will clone this repo there"
   else
     say "  not deployable: $REASON"
   fi
@@ -139,8 +147,25 @@ cmd_status() {
 
 # --- deploy ----------------------------------------------------------------
 
+# First-time setup: clone this repo to $LIVE, creating its parent directories.
+bootstrap_live() {
+  local src
+  src="$(clone_source)"
+  say "== deploy: $LIVE does not exist; first-time setup"
+  mkdir -p -- "$(dirname -- "$LIVE")" || return 1
+  say "== deploy: git clone $src $LIVE"
+  git clone -- "$src" "$LIVE" || return 1
+  say "deploy: live profile created at $(git -C "$LIVE" rev-parse --short HEAD)"
+  say "deploy: next, ./build.sh install to install plugins and build the image"
+  return 0
+}
+
 cmd_deploy() {
   require_host deploy
+  if live_is_absent; then
+    bootstrap_live
+    return $?
+  fi
   if ! live_is_clean_clone; then
     warn "build.sh deploy: refusing to touch $LIVE: it $REASON."
     warn "  deploy only fast-forwards a clean clone of this repo."

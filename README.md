@@ -55,6 +55,10 @@ Two things that are easy to get wrong:
 edit  ->  ./build.sh check  ->  git commit  ->  ./build.sh all   (Tim, on the host)
 ```
 
+On a new host, clone this repo anywhere and run `./build.sh all`. `deploy` sees that
+`~/.config/agentbox/claude/profile` does not exist yet and clones it; `install` then installs the
+plugins and builds the image. After that, the same command picks up each new commit.
+
 `./build.sh check` is offline and runs anywhere, including inside a session sandbox. It prints
 every problem as `path: problem` and exits 1 if any of them is an error. Warnings print the same
 way and do not fail the run. It rejects any top-level entry it does not recognize, so adding a
@@ -70,9 +74,12 @@ HEAD, lists the plugin pins, and reports whether `ab` and its subcommands are av
 `$AGENTBOX_SESSION` is set or `/run/agentbox` exists, because the live profile and `ab` are not
 visible from inside a session.
 
-- `deploy` does `git -C ~/.config/agentbox/claude/profile pull --ff-only`. If that directory is
-  not a clean clone of this repo, it refuses and prints the one-time migration: move it aside to
-  `profile.pre-repo`, then `git clone` this repo in its place.
+- `deploy` does `git -C ~/.config/agentbox/claude/profile pull --ff-only`. If that directory
+  does not exist (or is empty), it is a first-time setup: `deploy` creates
+  `~/.config/agentbox/claude/` and clones this repo (its `origin` URL, or this checkout if it has
+  no origin) to `profile/`. If the directory exists but is not a clean clone of this repo, it
+  refuses and prints the one-time migration: move it aside to `profile.pre-repo`, then
+  `git clone` this repo in its place.
 - `install` does `ab profile install claude`, then `ab image build claude` if a `Containerfile`
   exists. If this `ab` lacks a command, it says which and exits 3.
 - `all` is check, then deploy, then install, stopping at the first failure.
