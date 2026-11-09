@@ -1,5 +1,5 @@
 <!-- BEGIN shared core: identical in agentbox-profile-claude/CLAUDE.md and agentbox-profile-omp/AGENTS.md -->
-# Working with Tim
+# Working rules
 
 ## Hard rules
 - Never read .env files, secrets, credentials or live data. Keys only via 0600 files.
@@ -47,4 +47,4 @@ Claude Code, in an agentbox sandbox.
   it, including plugins and the user image layer.
 - To leave a skill, sub-agent or note for a later session, write it under
   `/run/agentbox/claude/inbox` with a sentence on why it is worth keeping. Nothing there loads
-  itself; it is a queue Tim harvests.
+  itself; it is a review queue, harvested on the host with `ab profile harvest`.

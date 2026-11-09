@@ -1,6 +1,6 @@
 # agentbox-profile-claude
 
-Tim's Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launcher.
+A Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launcher.
 **This repo is the source.** The live profile is a clone of it at
 `~/.config/agentbox/claude/profile`; nothing here edits that clone except `./build.sh deploy`.
 
@@ -28,7 +28,7 @@ Code expects. Read those before adding anything.
 
 They live in `docs/` rather than inside the directories they describe because the load
 directories are loaded, not read: every `.md` under `commands/` becomes a slash command, so a
-`commands/README.md` showed up as `/README`. `check` now errors on a `README*` at any depth in
+`commands/README.md` shows up as `/README`. `check` errors on a `README*` at any depth in
 any load directory, whatever its case. `agents/` and `commands/` currently do not exist —
 every load directory except `skills/` is optional, and absent means empty; create one when you
 add its first item.
@@ -49,7 +49,7 @@ Two things that are easy to get wrong:
 ## Workflow
 
 ```
-edit  ->  ./build.sh check  ->  git commit  ->  ./build.sh all   (Tim, on the host)
+edit  ->  ./build.sh check  ->  git commit  ->  ./build.sh all   (on the host)
 ```
 
 On a new host, clone this repo anywhere and run `./build.sh all`. `deploy` sees that

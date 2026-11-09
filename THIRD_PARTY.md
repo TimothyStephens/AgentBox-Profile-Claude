@@ -29,31 +29,24 @@ the vendored copy, except where noted.
 ## ub-mode
 
 - Source URL: https://github.com/unclebob/ub-mode
-- Path: `SKILL.md`, at the repository root. (The path given when this was vendored,
-  `plugins/ub-mode/skills/ub-mode`, does not exist at this commit — upstream keeps the skill at
-  the top level. Corrected here.)
+- Path: `SKILL.md`, at the repository root
 - Commit: `3da62bf3fcfd2034de41f30d920d2739e566171f`
 - License: MIT (`skills/ub-mode/LICENSE`, identical to upstream's root `LICENSE`)
 - Local changes: one. Upstream is otherwise byte-identical at that commit.
   1. Added `disable-model-invocation: true` to the frontmatter, so the skill loads only when
-     Tim asks for it — which matches its own description, "Use when the user runs /ub-mode or
-     asks for the reduced principles". Nothing else in the file changed.
-
-     Note on the reason this was requested: the key does not hide the skill. Per OMP's
-     frontmatter reference, `disable-model-invocation: true` means user-invocable only (the
-     `/ub-mode` command still appears in the menu and Claude can no longer load it on its own);
-     `hide: true` is the separate key that keeps a skill out of the menu. The effect asked for
-     — Claude not pulling these principles in uninvited — is what this key does give.
+     the user asks for it — which matches its own description, "Use when the user runs /ub-mode
+     or asks for the reduced principles". Nothing else in the file changed. The key does not
+     hide the skill: `/ub-mode` still appears in the menu, and Claude can no longer load it on
+     its own. `hide: true` is the separate key that keeps a skill out of the menu.
 
 ## mags-manifest-design
 
 - Source URL: https://github.com/TimothyStephens/MAGS-CodeDev
 - Path: `skills/mags-manifest-design/SKILL.md`
 - Commit: `d44fea8c5bf4021e3103ee9671a06940fc7f713c`
-- License: Tim's own project
+- License: none published upstream; the repository belongs to this profile's maintainer
 - Local changes: none — `SKILL.md` is the vendored file copied unchanged. Not diffed against
-  upstream: the repo is private, so the sandbox's egress could not reach it. The other two
-  entries were diffed successfully.
+  upstream: the repository is private and unreachable from a sandbox.
 
 ## Re-syncing a vendored skill
 
