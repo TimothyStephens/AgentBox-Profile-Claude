@@ -1,8 +1,24 @@
-# Plugins are DECLARED here and installed by agentbox (`ab profile install claude`).
+# Plugins are DECLARED here and installed by agentbox (`ab profile install claude`), which clones each
+# marketplace catalog at the pinned commit into ~/.config/agentbox/claude/plugins/<marketplace>. A session
+# mounts that tree read-only at /run/agentbox/claude/marketplaces and declares each entry to Claude Code
+# through the copied settings.json (`extraKnownMarketplaces` with a directory source, `enabledPlugins`),
+# so the plugin is read from the pinned checkout in place. `ab run --no-profile` skips this file with the
+# rest of the profile, and lockdown sessions load no plugins.
+#
 # Never vendor plugin files into skills/: EGM resolves its personas and standards via
 # ${CLAUDE_PLUGIN_ROOT} and breaks when copied.
+#
+# Schema (one [[plugin]] table per plugin, every key required; the format is agentbox's `plugins.py`,
+# shared with the OMP profile -- Claude Code takes [[plugin]] only, never [[npm]] or [[repo]]):
+#   id           "<name>@<marketplace>", as Claude Code names an installed plugin.
+#   marketplace  The catalog's own name (`name` in its .claude-plugin/marketplace.json); must equal the
+#                part of `id` after "@". The install checks the clone calls itself this.
+#   source       Where the catalog is cloned from: GitHub shorthand "owner/repo" or an https:// git URL.
+#   ref          40-character commit sha to pin. Never a branch or tag: a catalog is mutable and an
+#                unpinned install is not reproducible.
 
 [[plugin]]
-name = "egm@egm"
-marketplace = "google/elephant-goldfish-model"
+id = "egm@egm"
+marketplace = "egm"
+source = "google/elephant-goldfish-model"
 ref = "464db031e7dd1b9a79803ac8ea45f55c7c20c5bc"

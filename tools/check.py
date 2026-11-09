@@ -3,7 +3,7 @@
 
 Usage:
     check.py [ROOT]              validate ROOT (default: the repo this file lives in)
-    check.py --list-plugins ROOT print "name marketplace ref" for each declared plugin
+    check.py --list-plugins ROOT print "id source ref" for each declared plugin
 
 Every problem is printed as "path: problem". Warnings are printed the same way with a
 "warning: " prefix and do not affect the exit status.
@@ -114,7 +114,15 @@ SKILL_KEYS = {
     "comments",
 }
 
-PLUGIN_NAME_RE = re.compile(r"^[^@\s]+@[^@\s]+$")
+# plugins.toml is agentbox's format (`agentbox/plugins.py`), shared with the OMP profile: a plugin name and
+# a marketplace name are ASCII letters, digits, hyphens and dots, starting and ending with a letter or
+# digit, at most 64 characters each, the whole id at most 128. `source` is GitHub shorthand or an https URL.
+PLUGIN_NAME_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$")
+PLUGIN_KEYS = ("id", "marketplace", "source", "ref")
+# The sections agentbox's format knows that Claude Code cannot use. Named so the message says "OMP only"
+# rather than "unknown".
+OMP_ONLY_SECTIONS = ("npm", "repo")
+SHORTHAND_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$")
 HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
 SHA256_RE = re.compile(r"\b[0-9a-f]{64}\b")
 URL_RE = re.compile(r"\bhttps?://")
@@ -449,46 +457,85 @@ def check_load_dirs(root: Path, rep: Report) -> None:
                                  f"documentation goes in docs/{name}.md")
 
 
-def load_plugins(root: Path) -> list[dict]:
+def load_plugins_doc(root: Path) -> dict:
     path = root / "plugins.toml"
     if not path.is_file():
-        return []
+        return {}
     with path.open("rb") as handle:
-        data = tomllib.load(handle)
-    plugins = data.get("plugin", [])
-    return [p for p in plugins if isinstance(p, dict)]
+        return tomllib.load(handle)
+
+
+def load_plugins(root: Path) -> list[dict]:
+    plugins = load_plugins_doc(root).get("plugin", [])
+    return [p for p in plugins if isinstance(p, dict)] if isinstance(plugins, list) else []
 
 
 def check_plugins(root: Path, rep: Report) -> None:
+    """plugins.toml is declarative: agentbox installs these. The rules are agentbox's own
+    (`agentbox/plugins.py`), applied here so `check` fails where `ab profile install claude` would,
+    instead of passing a file the installer then refuses -- which is what happened on 9 Nov."""
     path = root / "plugins.toml"
     if not path.is_file():
         return
     try:
-        plugins = load_plugins(root)
+        data = load_plugins_doc(root)
     except tomllib.TOMLDecodeError as exc:
         rep.error(path, f"is not valid TOML: {exc}")
+        return
+    for key in data:
+        if key in OMP_ONLY_SECTIONS:
+            rep.error(path, f"[[{key}]] is OMP-only; Claude Code plugins arrive through a marketplace "
+                            f"catalog, so declare a [[plugin]]")
+        elif key != "plugin":
+            rep.error(path, f"unknown section [[{key}]] (only [[plugin]] tables are read)")
+    plugins = data.get("plugin", [])
+    if not isinstance(plugins, list):
+        rep.error(path, "'plugin' must be written as [[plugin]] tables, one per entry")
         return
     seen: set[str] = set()
     for index, plugin in enumerate(plugins):
         where = f"[[plugin]] #{index + 1}"
-        name = plugin.get("name")
-        if not isinstance(name, str) or not name:
-            rep.error(path, f"{where} is missing a name")
-        elif not PLUGIN_NAME_RE.match(name):
-            rep.error(path, f"{where} name {name!r} is not of the form 'plugin@marketplace'")
-        elif name in seen:
-            rep.error(path, f"{where} name {name!r} is declared twice")
-        else:
-            seen.add(name)
-        label = name if isinstance(name, str) and name else where
+        if not isinstance(plugin, dict):
+            rep.error(path, f"{where} is not a table")
+            continue
+        pid = plugin.get("id")
+        label = pid if isinstance(pid, str) and pid else where
+        for key in PLUGIN_KEYS:
+            value = plugin.get(key)
+            if not isinstance(value, str) or not value.strip():
+                rep.error(path, f"{label} is missing {key}")
+        for key in plugin:
+            if key not in PLUGIN_KEYS:
+                # An error, as it is for the installer: a typo'd key is an entry with a value missing.
+                rep.error(path, f"{label} has unknown key {key!r} (allowed: {', '.join(PLUGIN_KEYS)})")
+        if not isinstance(pid, str) or not pid:
+            continue
+        name, sep, after = pid.partition("@")
+        if not sep:
+            rep.error(path, f"{where} id {pid!r} is not of the form 'plugin@marketplace'")
+            continue
+        if pid in seen:
+            rep.error(path, f"{where} id {pid!r} is declared twice")
+        seen.add(pid)
+        if len(pid) > 128:
+            rep.error(path, f"{label} id is {len(pid)} characters, over the 128-character limit")
+        for part, what in ((name, "plugin name"), (after, "marketplace name")):
+            if not PLUGIN_NAME_RE.match(part):
+                rep.error(path, f"{label} invalid {what} {part!r} (ASCII letters, digits, '-' and '.', "
+                                f"starting and ending with a letter or digit)")
+            elif len(part) > 64:
+                rep.error(path, f"{label} {what} {part!r} is {len(part)} characters, over the 64-character limit")
         marketplace = plugin.get("marketplace")
-        if not isinstance(marketplace, str) or not marketplace:
-            rep.error(path, f"{label} is missing a marketplace")
+        if isinstance(marketplace, str) and marketplace and marketplace != after:
+            rep.error(path, f"{label} marketplace is {marketplace!r} but the id says {after!r}")
+        source = plugin.get("source")
+        if isinstance(source, str) and source and not SHORTHAND_RE.match(source) \
+                and not source.startswith("https://"):
+            rep.error(path, f"{label} source {source!r} is neither GitHub shorthand 'owner/repo' nor an "
+                            f"https:// URL")
         ref = plugin.get("ref")
-        if not isinstance(ref, str) or not ref:
-            rep.error(path, f"{label} is missing a ref; pin it to a 40-character commit sha")
-        elif not HEX40_RE.match(ref):
-            rep.error(path, f"{label} ref {ref!r} is not a 40-character hex commit sha")
+        if isinstance(ref, str) and ref and not HEX40_RE.match(ref):
+            rep.error(path, f"{label} ref {ref!r} is not a 40-character hex commit sha (never a branch or tag)")
 
 
 def logical_lines(text: str) -> list[tuple[int, str]]:
@@ -581,8 +628,7 @@ def main(argv: list[str]) -> int:
     if list_plugins:
         try:
             for plugin in load_plugins(root):
-                print(plugin.get("name", "?"), plugin.get("marketplace", "?"),
-                      plugin.get("ref", "?"))
+                print(plugin.get("id", "?"), plugin.get("source", "?"), plugin.get("ref", "?"))
         except tomllib.TOMLDecodeError as exc:
             print(f"plugins.toml: is not valid TOML: {exc}", file=sys.stderr)
             return 1

@@ -1,4 +1,5 @@
 [[plugin]]
-name = "egm@egm"
-marketplace = "google/elephant-goldfish-model"
+id = "egm@egm"
+marketplace = "egm"
+source = "google/elephant-goldfish-model"
 ref = "464db031e7dd1b9a79803ac8ea45f55c7c20c5bc"

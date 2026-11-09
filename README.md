@@ -14,7 +14,7 @@ A Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launcher.
 | `commands/` | Slash commands, one `.md` each | Mounted **read-only** |
 | `docs/` | Documentation for each load directory, `docs/<dir>.md`, and `docs/decisions.md` | Not loaded — that is the point |
 | `settings.json` | Durable harness settings (permissions, hooks, env) | **Copied fresh** at each session start |
-| `plugins.toml` | Plugin declarations, pinned by commit | Installed by `ab profile install claude` |
+| `plugins.toml` | Marketplace plugins, pinned by commit (agentbox's `[[plugin]]` format, shared with the OMP profile) | `ab profile install claude` clones each catalog at its sha; sessions mount the tree **read-only** and enable the plugins through the copied `settings.json` |
 | `Containerfile` | Personal tool layer on the agentbox-claude image | Built by `ab image build claude` |
 | `build.sh` | check / status / deploy / install driver | — |
 | `tools/check.py` | The validator `check` runs (python3 ≥ 3.11, stdlib only) | — |
@@ -45,6 +45,23 @@ Two things that are easy to get wrong:
 - **Never vendor plugin files into `skills/`.** Declare the plugin in `plugins.toml`. EGM in
   particular resolves its personas and standards through `${CLAUDE_PLUGIN_ROOT}` and breaks when
   its files are copied somewhere else.
+
+## How a plugin reaches a session
+
+`plugins.toml` declares a plugin as `id = "<name>@<marketplace>"`, the catalog's own `marketplace`
+name, a `source` to clone it from, and a 40-character `ref`. On the host, `ab profile install claude`
+clones each catalog at that sha into `~/.config/agentbox/claude/plugins/<marketplace>` and checks that
+the clone names itself as declared and lists the plugin. A session mounts that tree read-only at
+`/run/agentbox/claude/marketplaces` and writes two keys into the copied `settings.json`:
+`extraKnownMarketplaces` (a `directory` source at that path) and `enabledPlugins`. Claude Code
+registers both at startup and reads the plugin from the pinned checkout in place; its own records
+(`plugins/installed_plugins.json`, `known_marketplaces.json`) go in the per-project config dir, which
+is writable. Nothing in this repo is copied into a session, and no session can change the tree.
+
+Changing `ref` therefore means: edit, `check`, commit, `./build.sh all` (deploy, then install). A
+session started before the install sees the old checkout; one started after it sees the new one and
+warns if the tree no longer matches `plugins.toml`. Lockdown sessions load no plugins, as OMP's do
+not; `ab run --no-profile` loads none either.
 
 ## Workflow
 

@@ -126,8 +126,8 @@ cmd_status() {
   say "plugins:"
   if [[ -f "$REPO/plugins.toml" ]]; then
     python3 "$REPO/tools/check.py" --list-plugins "$REPO" \
-      | while read -r name marketplace ref; do
-          say "  $name  $marketplace  ${ref:0:12}"
+      | while read -r id source ref; do
+          say "  $id  $source  ${ref:0:12}"
         done
   else
     say "  (no plugins.toml)"

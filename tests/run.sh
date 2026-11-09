@@ -281,13 +281,27 @@ expect_error "Containerfile downloads are checksum-verified: fail (never verifie
 
 echo "== shared: plugins.toml format"
 expect_clean "plugins.toml format: pass" "$(fixture)"
-d="$(fixture)"; sed -i 's/^name = .*/name = "egm"/' "$d/plugins.toml"
-expect_error "plugins.toml format: fail (name not x@y)" "$d" \
+d="$(fixture)"; sed -i 's/^id = .*/id = "egm"/' "$d/plugins.toml"
+expect_error "plugins.toml format: fail (id not x@y)" "$d" \
   "is not of the form 'plugin@marketplace'"
 d="$(fixture)"; sed -i '/^marketplace/d' "$d/plugins.toml"
-expect_error "plugins.toml format: fail (no marketplace)" "$d" "is missing a marketplace"
+expect_error "plugins.toml format: fail (no marketplace)" "$d" "is missing marketplace"
+d="$(fixture)"; sed -i 's/^marketplace = .*/marketplace = "other"/' "$d/plugins.toml"
+expect_error "plugins.toml format: fail (marketplace differs from id)" "$d" \
+  "marketplace is 'other' but the id says 'egm'"
+d="$(fixture)"; sed -i '/^source/d' "$d/plugins.toml"
+expect_error "plugins.toml format: fail (no source)" "$d" "is missing source"
+d="$(fixture)"; sed -i 's|^source = .*|source = "/tmp/egm"|' "$d/plugins.toml"
+expect_error "plugins.toml format: fail (source is a path)" "$d" "neither GitHub shorthand"
+d="$(fixture)"; sed -i 's/^id = .*/id = "bad_name@egm"/' "$d/plugins.toml"
+expect_error "plugins.toml format: fail (name charset)" "$d" "invalid plugin name 'bad_name'"
+d="$(fixture)"; printf 'name = "egm@egm"\n' >> "$d/plugins.toml"
+expect_error "plugins.toml format: fail (unknown key, the 9 Nov install failure)" "$d" \
+  "has unknown key 'name'"
+d="$(fixture)"; printf '\n[[npm]]\nname = "pi-lens"\nversion = "4.4.9"\n' >> "$d/plugins.toml"
+expect_error "plugins.toml format: fail (OMP-only section)" "$d" "[[npm]] is OMP-only"
 d="$(fixture)"; sed -i '/^ref/d' "$d/plugins.toml"
-expect_error "plugins.toml format: fail (no ref)" "$d" "is missing a ref"
+expect_error "plugins.toml format: fail (no ref)" "$d" "is missing ref"
 d="$(fixture)"; sed -i 's/^ref = .*/ref = "464db03"/' "$d/plugins.toml"
 expect_error "plugins.toml format: fail (ref not 40 hex)" "$d" \
   "is not a 40-character hex commit sha"
