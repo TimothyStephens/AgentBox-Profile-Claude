@@ -62,7 +62,7 @@ is writable. Nothing in this repo is copied into a session, and no session can c
 Changing `ref` therefore means: edit, `check`, commit, `./build.sh all` (deploy, then install). A
 session started before the install sees the old checkout; one started after it sees the new one and
 warns if the tree no longer matches `plugins.toml`. Lockdown sessions load no plugins, as OMP's do
-not; `ab run --no-profile` loads none either.
+not; `ab session start --no-profile` loads none either.
 
 ## Workflow
 
@@ -105,7 +105,7 @@ they were started with.
 ## Running a session with no profile
 
 ```
-ab run --no-profile
+ab session start --no-profile
 ```
 
 That skips everything here — `CLAUDE.md`, `skills/`, `agents/`, `commands/`, `settings.json`,

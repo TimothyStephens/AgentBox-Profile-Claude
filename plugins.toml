@@ -2,7 +2,7 @@
 # marketplace catalog at the pinned commit into ~/.config/agentbox/claude/plugins/<marketplace>. A session
 # mounts that tree read-only at /run/agentbox/claude/marketplaces and declares each entry to Claude Code
 # through the copied settings.json (`extraKnownMarketplaces` with a directory source, `enabledPlugins`),
-# so the plugin is read from the pinned checkout in place. `ab run --no-profile` skips this file with the
+# so the plugin is read from the pinned checkout in place. `ab session start --no-profile` skips this file with the
 # rest of the profile, and lockdown sessions load no plugins.
 #
 # Never vendor plugin files into skills/: EGM resolves its personas and standards via

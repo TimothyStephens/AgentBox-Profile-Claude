@@ -43,7 +43,7 @@ Claude Code, in an agentbox sandbox.
 - `CLAUDE.md`, `skills/`, `agents/` and `commands/` are mounted read-only. `settings.json` is
   copied fresh at each session start, so a settings change made in a session is lost; durable
   ones go in the profile repo, `agentbox-profile-claude`.
-- The live profile is `~/.config/agentbox/claude/profile`. `ab run --no-profile` skips all of
+- The live profile is `~/.config/agentbox/claude/profile`. `ab session start --no-profile` skips all of
   it, including plugins and the user image layer.
 - To leave a skill, sub-agent or note for a later session, write it under
   `/run/agentbox/claude/inbox` with a sentence on why it is worth keeping. Nothing there loads
