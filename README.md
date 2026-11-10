@@ -20,6 +20,7 @@ A Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launcher.
 | `tools/check.py` | The validator `check` runs (python3 ≥ 3.11, stdlib only) | — |
 | `tests/run.sh` | Tests for the validator and the host guards | — |
 | `THIRD_PARTY.md` | Source, commit, license and local changes of vendored skills | — |
+| `seed/` | Keyless copies of files agentbox reads from `~/.config/agentbox/claude/` beside the live profile; the same mechanism as the OMP repo, where it carries `models.yml` and `config.yml`. Nothing uses it for Claude today | `deploy` installs a missing one, never overwrites; `status` reports each |
 | `.dev/` | Scratch space: EGM artifacts (`.dev/docs`), show-me's HTML files | Gitignored; never deployed |
 
 [`docs/skills.md`](docs/skills.md), [`docs/agents.md`](docs/agents.md), and

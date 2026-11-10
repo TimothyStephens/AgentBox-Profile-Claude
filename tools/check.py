@@ -40,6 +40,9 @@ TOP_LEVEL = {
     "tests",
     "THIRD_PARTY.md",
     "README.md",
+    # Keyless copies of what agentbox reads from ~/.config/agentbox/claude/; build.sh deploy installs
+    # them. The same mechanism as the OMP repo; nothing uses it for Claude today.
+    "seed",
     # not part of the profile, but expected in a working tree
     ".git",
     ".gitignore",
@@ -593,6 +596,52 @@ def check_containerfile(root: Path, rep: Report) -> None:
                                 "(pipe it through sha256sum -c -)")
 
 
+# --- seed/ -----------------------------------------------------------------
+
+# A credential-shaped line: `apiKey: sk-...`, `"token": "..."`, `password = ...`.
+CREDENTIAL_LINE = re.compile(
+    r"""^\s*["']?(?P<key>apiKey|api_key|apikey|token|secret|password|authorization)["']?\s*[:=]\s*["']?(?P<value>[^\s"',]*)""",
+    re.IGNORECASE)
+SEED_DIR = "seed"
+
+
+def check_seed(root: Path, rep) -> None:
+    """`seed/`: keyless copies of the files agentbox reads from ~/.config/agentbox/<agent>/ (OMP: models.yml,
+    config.yml, mcp.json, mags-codedev.yaml), which `build.sh deploy` installs when the live one is missing.
+    Files only, and never a credential: agentbox refuses any `apiKey` in the model seed outright, and the
+    rest are mounted read-only into every session, where the agent can read them. A `$VAR` reference and an
+    empty or `none` value are not credentials."""
+    seed = root / SEED_DIR
+    if not seed.exists():
+        return
+    if not seed.is_dir():
+        rep.error(SEED_DIR, "must be a directory of seed files")
+        return
+    for entry in sorted(seed.iterdir(), key=lambda p: p.name):
+        rel = f"{SEED_DIR}/{entry.name}"
+        if entry.is_dir():
+            rep.error(rel, "seed/ holds files only: agentbox reads flat files from ~/.config/agentbox/<agent>/")
+            continue
+        try:
+            text = entry.read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            rep.error(rel, f"cannot read: {exc}")
+            continue
+        for n, line in enumerate(text.splitlines(), 1):
+            m = CREDENTIAL_LINE.match(line)
+            if not m:
+                continue
+            key, value = m.group("key"), m.group("value")
+            if entry.name == "models.yml" and key.lower() == "apikey":
+                rep.error(rel, f"line {n}: `apiKey` is refused in the model seed by agentbox itself; remove "
+                               "it, keys live in ~/.config/agentbox/keys/ (`ab keys set <provider>`)")
+                continue
+            if value.lower() in ("", "none", "null", "~") or value.startswith("$"):
+                continue
+            rep.error(rel, f"line {n} looks like a credential ({key}: ...); seeds are keyless, keys go "
+                           "through `ab keys set <provider>`")
+
+
 CHECKS = (
     check_layout,
     check_files,
@@ -604,6 +653,7 @@ CHECKS = (
     check_commands,
     check_plugins,
     check_containerfile,
+    check_seed,
 )
 
 

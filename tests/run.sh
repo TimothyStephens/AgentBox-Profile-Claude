@@ -310,6 +310,21 @@ expect_error "plugins.toml format: fail (duplicate)" "$d" "is declared twice"
 d="$(fixture)"; printf 'name = [[\n' > "$d/plugins.toml"
 expect_error "plugins.toml format: fail (invalid TOML)" "$d" "is not valid TOML"
 
+echo "== shared: seed directory"
+d="$(fixture)"; mkdir "$d/seed"
+printf 'providers:\n  llama-cpp:\n    baseUrl: http://10.0.0.2:8080/v1\n' > "$d/seed/models.yml"
+expect_clean "seed/ holds keyless config" "$d"
+d="$(fixture)"; mkdir -p "$d/seed/sub"
+expect_error "seed/ with a subdirectory" "$d" "seed/ holds files only"
+d="$(fixture)"; mkdir "$d/seed"; printf 'mcp:\n  token: ghp_realvalue\n' > "$d/seed/config.yml"
+expect_error "seed/ file holding a credential" "$d" "looks like a credential"
+d="$(fixture)"; mkdir "$d/seed"; printf 'providers:\n  openai:\n    apiKey: none\n' > "$d/seed/models.yml"
+expect_error "seed/ models.yml with any apiKey" "$d" 'apiKey` is refused in the model seed'
+d="$(fixture)"; mkdir "$d/seed"; printf '{"env": {"TOKEN": "${X}"}}\n' > "$d/seed/mcp.json"
+expect_clean "seed/ env reference is not a credential" "$d"
+expect_exit "build.sh: status lists the seeds" 0 "seeds:" \
+  env -C "$REPO" AGENTBOX_CLAUDE_PROFILE="$TMP/no-such/profile" ./build.sh status
+
 echo "== shared: build.sh exit codes"
 expect_exit "build.sh: exit 2 refused (deploy inside a session)" 2 "host only" \
   env -C "$REPO" AGENTBOX_SESSION=test ./build.sh deploy
