@@ -338,6 +338,30 @@ expect_exit "build.sh: status reports a missing live profile as clonable" 0 \
   "does not exist yet; ./build.sh deploy will clone" \
   env -C "$REPO" AGENTBOX_CLAUDE_PROFILE="$TMP/no-such-profile" ./build.sh status
 
+echo "== shared: build.sh deploy checks the live clone against this repo"
+# deploy itself is host only, so scratch repositories stand in for origin, the live clone and this checkout
+# and the functions are called directly from a sourced build.sh.
+git_q() { git -c user.name=t -c user.email=t@t.invalid -c init.defaultBranch=main "$@" >/dev/null 2>&1; }
+deploy_scratch() {  # deploy_scratch DIR -> DIR/origin.git, DIR/repo and DIR/live, all at the same commit
+  local d="$1"
+  mkdir -p "$d" && git_q init --bare "$d/origin.git" && git_q clone "$d/origin.git" "$d/repo" \
+    && printf 'one\n' > "$d/repo/f" && git_q -C "$d/repo" add f && git_q -C "$d/repo" commit -m one \
+    && git_q -C "$d/repo" push origin HEAD && git_q clone "$d/origin.git" "$d/live"
+}
+d="$TMP/deploy-ok"; deploy_scratch "$d"
+expect_exit "shared: build.sh deploy accepts a live clone at this repo's HEAD — pass" 0 "" \
+  bash -c 'source "$1"; live_matches_repo "$2" "$3"' _ "$REPO/build.sh" "$d/live" "$d/repo"
+d="$TMP/deploy-unpushed"; deploy_scratch "$d"
+printf 'two\n' > "$d/repo/f"; git_q -C "$d/repo" commit -am two
+expect_exit "shared: build.sh deploy refuses when this repo is unpushed — fail" 1 "push this repo first" \
+  bash -c 'source "$1"; git -C "$2" pull --ff-only -q && live_matches_repo "$2" "$3"' _ \
+  "$REPO/build.sh" "$d/live" "$d/repo"
+d="$TMP/deploy-diverged"; deploy_scratch "$d"
+printf 'live\n' > "$d/live/f"; git_q -C "$d/live" commit -am live-edit
+expect_exit "shared: build.sh deploy treats a live clone with its own commits as diverged — fail" 1 "diverged" \
+  bash -c 'source "$1"; LIVE="$2"; REPO="$3"; live_is_clean_clone || { printf "%s\n" "$REASON"; exit 1; }' _ \
+  "$REPO/build.sh" "$d/live" "$d/repo"
+
 # ---------------------------------------------------------------------------
 # Harness-specific. These differ between the repos.
 # ---------------------------------------------------------------------------

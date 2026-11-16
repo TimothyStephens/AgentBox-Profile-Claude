@@ -94,13 +94,15 @@ visible from inside a session.
   `~/.config/agentbox/claude/` and clones this repo (its `origin` URL, or this checkout if it has
   no origin) to `profile/`. If the directory exists but is not a clean clone of this repo, it
   refuses and prints the one-time migration: move it aside to `profile.pre-repo`, then
-  `git clone` this repo in its place.
+  `git clone` this repo in its place. A live clone with commits this repo lacks counts as
+  diverged, not clean. The pull comes from the live clone's `origin`, not from this checkout, so
+  after it `deploy` compares the two HEADs and fails with "push this repo first" when they differ.
 - `install` does `ab profile install claude`, then `ab image build claude` if a `Containerfile`
   exists. If this `ab` lacks a command, it says which and exits 3.
 - `all` is check, then deploy, then install, stopping at the first failure.
 
-New sessions pick up a deploy immediately. Sessions already running keep the `settings.json`
-they were started with.
+New sessions pick up a deploy immediately. Sessions already running keep what they loaded at
+start (the `settings.json` copy, the read-only mounts).
 
 ## Running a session with no profile
 
