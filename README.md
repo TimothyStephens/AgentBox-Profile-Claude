@@ -79,8 +79,8 @@ every problem as `path: problem` and exits 1 if any of them is an error. Warning
 way and do not fail the run. It rejects any top-level entry it does not recognize, so adding a
 directory here means adding it to `TOP_LEVEL` in `tools/check.py` too. `.dev/` is allowed and
 exempt from the symlink and file-size rules — it is gitignored scratch space and nothing in it
-reaches a session — but a file named like a secret (`.env*`, `*.pem`, `id_*`) is an error
-anywhere, `.dev/` included.
+reaches a session — but a file named like a secret (`.env*`, `*.pem`, `*.key`, `id_*`, a `secrets/`
+directory) is an error anywhere, `.dev/` included.
 
 `./build.sh status` runs anywhere too: it compares the live profile's commit against this repo's
 HEAD, lists the plugin pins, and reports whether `ab` and its subcommands are available.

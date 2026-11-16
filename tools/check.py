@@ -88,8 +88,8 @@ SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 # Frontmatter keys Claude Code and the official marketplace document for skills. An
 # undocumented key only warns: Claude Code adds keys faster than this list can track, and a
 # key this validator has not heard of is a reason to look, not a reason to block a deploy.
-# Sources, both readable from a session at
-# /run/agentbox/claude/plugins/marketplaces/claude-plugins-official:
+# Sources, in the official marketplace (anthropics/claude-plugins-official; a profile that declares it in
+# plugins.toml sees the pinned clone at /run/agentbox/claude/marketplaces/claude-plugins-official):
 #   claude-code-setup/skills/claude-automation-recommender/references/skills-reference.md
 #     -> name, description, disable-model-invocation, user-invocable, allowed-tools,
 #        context, agent
@@ -132,12 +132,17 @@ URL_RE = re.compile(r"\bhttps?://")
 
 SECRET_KEY_PARTS = ("KEY", "TOKEN", "SECRET", "PASSWORD")
 
-# Files that must never be committed to the profile.
+# Files that must never be committed to the profile: the names agentbox masks in a session, so a file of
+# that name here would read as empty there and is a key sitting in the grant here.
 FORBIDDEN_FILE_RE = [
     re.compile(r"^\.env($|\.)"),
     re.compile(r"\.pem$"),
+    re.compile(r"\.key$"),
     re.compile(r"^id_"),
 ]
+# A path component of this name is masked whole by agentbox, so a directory called secrets/ (or a file so
+# named) is an error wherever it is.
+SECRETS_NAME = "secrets"
 
 MAX_FILE_BYTES = 1024 * 1024
 CLAUDE_MD_WARN_LINES = 150
@@ -278,6 +283,9 @@ def check_files(root: Path, rep: Report) -> None:
             continue
         # A secret-shaped filename is an error wherever it is, .dev/ included: a key sitting
         # in scratch space is still a key sitting in the grant.
+        if path.name == SECRETS_NAME:
+            rep.error(path, "is named secrets, which agentbox masks whole; keys live outside the profile")
+            continue
         if not path.is_dir() or path.is_symlink():
             for pattern in FORBIDDEN_FILE_RE:
                 if pattern.search(path.name):
@@ -547,10 +555,12 @@ def check_plugins(root: Path, rep: Report) -> None:
         if isinstance(marketplace, str) and marketplace and marketplace != after:
             rep.error(path, f"{label} marketplace is {marketplace!r} but the id says {after!r}")
         source = plugin.get("source")
-        if isinstance(source, str) and source and not SHORTHAND_RE.match(source) \
-                and not source.startswith("https://"):
-            rep.error(path, f"{label} source {source!r} is neither GitHub shorthand 'owner/repo' nor an "
-                            f"https:// URL")
+        if isinstance(source, str) and source and not SHORTHAND_RE.match(source):
+            # The launcher's _check_https: https:// only, no credentials in the host part, no `..` anywhere.
+            host = source[len("https://"):].split("/", 1)[0] if source.startswith("https://") else ""
+            if not host or "@" in host or host.startswith(".") or ".." in source:
+                rep.error(path, f"{label} source {source!r} is neither GitHub shorthand 'owner/repo' nor a plain "
+                                f"https:// URL (no credentials, no '..')")
         ref = plugin.get("ref")
         if isinstance(ref, str) and ref and not HEX40_RE.match(ref):
             rep.error(path, f"{label} ref {ref!r} is not a 40-character hex commit sha (never a branch or tag)")
@@ -622,7 +632,7 @@ SEED_DIR = "seed"
 
 def check_seed(root: Path, rep) -> None:
     """`seed/`: keyless copies of the files agentbox reads from ~/.config/agentbox/<agent>/ (OMP: models.yml,
-    config.yml, mcp.json, mags-codedev.yaml), which `build.sh deploy` installs when the live one is missing.
+    config.yml, mcp.json; none for Claude today), which `build.sh deploy` installs when the live one is missing.
     Files only, and never a credential: agentbox refuses any `apiKey` in the model seed outright, and the
     rest are mounted read-only into every session, where the agent can read them. A `$VAR` reference and an
     empty or `none` value are not credentials."""
