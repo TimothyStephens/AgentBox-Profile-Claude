@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-11-16: frontmatter scalars are read as YAML reads them
+
+- What: `tools/check.py parse_frontmatter` strips a matching surrounding quote pair and a trailing
+  ` #...` comment outside quotes from a scalar value, and a required key whose value is empty
+  (`description: ""`) is reported as missing. Block scalars are untouched: a ` #` inside one is text.
+- Why: `name: "my-skill"` failed the name pattern on the quote characters although Claude Code reads
+  it fine, and `description: ""` counted as present, so a skill with no description passed `check`
+  (review of 16 Nov, item 25). The OMP checker already read scalars this way.
+
 ## 2026-11-16: `deploy` fails when the live clone does not reach this repo's HEAD
 
 - What: after `git pull --ff-only`, `build.sh deploy` compares the live clone's HEAD with this

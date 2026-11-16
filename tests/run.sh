@@ -174,6 +174,19 @@ printf -- '---\nname: sample-skill\n---\n\nBody.\n' > "$d/skills/sample-skill/SK
 expect_error "required skill frontmatter: fail" "$d" "missing required key 'description'"
 d="$(fixture)"; printf '# no frontmatter\n' > "$d/skills/sample-skill/SKILL.md"
 expect_error "required skill frontmatter: fail (no frontmatter)" "$d" "no YAML frontmatter"
+# Quoted scalars and trailing comments are YAML; `""` is an empty value, so a required key set to it is missing.
+d="$(fixture)"
+printf -- '---\nname: "sample-skill"\ndescription: '"'"'Use when testing: quoted.'"'"'\n---\n\nBody.\n' \
+  > "$d/skills/sample-skill/SKILL.md"
+expect_clean "shared: frontmatter parses — pass (quoted values)" "$d"
+d="$(fixture)"
+printf -- '---\nname: sample-skill # the directory name\ndescription: Use when testing.\n---\n\nBody.\n' \
+  > "$d/skills/sample-skill/SKILL.md"
+expect_clean "shared: frontmatter parses — pass (trailing comment)" "$d"
+d="$(fixture)"
+printf -- '---\nname: sample-skill\ndescription: ""\n---\n\nBody.\n' > "$d/skills/sample-skill/SKILL.md"
+expect_error "shared: skill frontmatter required keys — fail (empty description)" "$d" \
+  "missing required key 'description'"
 d="$(fixture)"; rm "$d/skills/sample-skill/SKILL.md"
 expect_error "required skill frontmatter: fail (no SKILL.md)" "$d" "SKILL.md: is missing"
 

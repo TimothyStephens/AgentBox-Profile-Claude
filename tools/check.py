@@ -182,6 +182,21 @@ class Report:
 # ---------------------------------------------------------------------------
 
 
+def scalar(value: str) -> str:
+    """A plain or quoted YAML scalar as its text: a matching surrounding quote pair is stripped (what follows
+    the closing quote can only be a comment), and so is a trailing ` #...` comment outside quotes. `""` is
+    therefore empty, and a required key set to it is missing."""
+    value = value.strip()
+    if value[:1] in ('"', "'"):
+        end = value.find(value[0], 1)
+        if end != -1:
+            return value[1:end]
+    cut = value.find(" #")
+    if cut != -1:
+        value = value[:cut].rstrip()
+    return value
+
+
 def parse_frontmatter(text: str) -> tuple[dict[str, str] | None, str | None]:
     """Return (mapping, error). Exactly one of the two is None."""
     lines = text.splitlines()
@@ -206,7 +221,7 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str] | None, str | None]:
             return None, f"frontmatter line {i + 1} is not 'key: value'"
         key, _, value = raw.partition(":")
         key = key.strip()
-        value = value.strip()
+        value = scalar(value)
         i += 1
         # A block scalar (`key: >`) or a nested mapping (`key:` with indented lines under it)
         # continues over the following indented lines. Flatten them into the value: these
