@@ -430,7 +430,7 @@ expect_error "shared: plugin id is unique — fail" "$d" "is declared twice"
 
 echo "== shared: seed directory"
 d="$(fixture)"; mkdir "$d/seed"
-printf 'providers:\n  llama-cpp:\n    baseUrl: http://10.0.0.2:8080/v1\n' > "$d/seed/models.yml"
+printf 'providers:\n  llama-cpp:\n    baseUrl: http://192.0.2.2:8080/v1\n' > "$d/seed/models.yml"
 expect_clean "shared: seed/ holds keyless config — pass" "$d"
 d="$(fixture)"; mkdir -p "$d/seed/sub"
 expect_error "shared: seed/ with a subdirectory — fail" "$d" "seed/ holds files only"
