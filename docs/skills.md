@@ -50,14 +50,44 @@ changes to a vendored skill belong in `THIRD_PARTY.md`, so the skill keeps diffi
 against upstream.
 
 `skills/` itself holds only skill directories: a plain file sitting directly in `skills/` is an
-error, since nothing loads it. Inside `skills/<name>/` put whatever the skill needs —
+error, since nothing loads it (`.gitkeep` excepted, see below). Inside `skills/<name>/` put whatever the skill needs —
 references, scripts, a `LICENSE` — with one exception: no `README*` file, at any depth and in
 any case. Documentation never sits inside a load directory, which is why this file lives in
 `docs/` instead. If a vendored skill ships a README, drop it and summarize it in
 `THIRD_PARTY.md` under that skill's local changes.
 
-## Vendored skills
+## Shared skills: the `agentbox-skills` plugin
 
-`show-me`, `ub-mode`, and `mags-manifest-design` come from upstream repos; see `THIRD_PARTY.md`
-for source, pinned commit, license, and local changes. Do not reformat their `SKILL.md` files —
-that makes re-syncing with upstream painful.
+The skills every agentbox profile has are not in `skills/`. They live in one repository,
+`agentbox-skills` (<https://github.com/TimothyStephens/AgentBox-Skills>), declared in
+`plugins.toml` as `agentbox@agentbox-skills` at a pinned commit. Claude Code namespaces plugin
+skills, so they run as `/agentbox:<name>`, e.g. `/agentbox:show-me` or `/agentbox:learn-repo`.
+Provenance, licences and local changes of the vendored ones are in that repository's
+`THIRD_PARTY.md`; change them there, never by copying one back into `skills/`.
+
+| Skill | What for | Model-invocable |
+| --- | --- | --- |
+| `learn-repo` | build an understanding of an existing repo before a task | no |
+| `review-drift` | review another agent's work for scope creep and drift from a plan, from a clean context | no |
+| `show-me` | explain the current topic with diagrams, code-shape sketches or an HTML file under `.dev/show-me` | no |
+| `ub-mode` | the reduced coding principles, on request | no |
+| `mags-manifest-design` | write or edit a MAGs-CodeDev `manifest.json` | yes |
+| `full-review` | a read-only, comprehensive code review of a branch, range, PR or the whole repo | no |
+| `handoff` | a dated handoff note at the end of a session, for the next one's `learn-repo` | no |
+| `characterization-tests` | pin the current behaviour of untested code before changing it | no |
+| `systematic-debugging` | root-cause a bug or failure before fixing it | yes |
+| `verification-before-completion` | run the checks before claiming work is done | yes |
+| `test-driven-development` | write the test first | yes |
+| `skill-creator` | author and evaluate a skill | yes |
+| `webapp-testing` | drive a local web UI with Playwright (not in the images; see agentbox-skills' THIRD_PARTY.md) | yes |
+| `differential-review` | security-focused review of a PR, commit or diff | yes |
+| `insecure-defaults` | find fail-open insecure defaults (hardcoded secrets, weak auth) | yes |
+| `supply-chain-risk-auditor` | audit a project's dependencies (needs network the `packages` egress mostly blocks) | yes |
+
+"Model-invocable: no" means `disable-model-invocation: true`: the skill runs only when invoked.
+The list is the plugin's at the pinned commit; its README is the current one.
+
+`skills/` holds only skills this profile alone has, and none today: it is empty but for
+`.gitkeep`, which keeps it in git. It must still exist, because agentbox mounts it read-only
+over the skill path; that `.gitkeep` is the one plain file `check` allows directly in `skills/`.
+A skill every profile should have goes in `agentbox-skills` instead.

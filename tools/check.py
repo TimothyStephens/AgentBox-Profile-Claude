@@ -61,7 +61,8 @@ UNTRACKED_DIRS = {".dev"}
 # Entries that must exist. Containerfile is optional (it is a personal tool layer), and every
 # load directory except skills/ is optional too: an empty one cannot be
 # committed, and an absent one is indistinguishable from an empty one once agentbox has
-# mounted it.
+# mounted it. skills/ stays required, kept by skills/.gitkeep when it holds no skill (see
+# SKILLS_PLACEHOLDER).
 REQUIRED = [
     "CLAUDE.md",
     "settings.json",
@@ -84,6 +85,12 @@ FLAT_LOAD_DIRS = {"agents": {".md"}, "commands": {".md"}}
 LOAD_DIRS = (SKILL_LOAD_DIR, *FLAT_LOAD_DIRS)
 
 SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+
+# The one plain file skills/ may hold directly: it keeps the directory in git when the profile has no skills
+# of its own (the shared ones come from the agentbox-skills plugin). skills/ must still exist, because agentbox
+# mounts it read-only over the agent's skill path; without the mount that path is writable per-project state,
+# where one session could leave a skill for every later one. No agent loads a dotfile there as a skill.
+SKILLS_PLACEHOLDER = ".gitkeep"
 
 # Frontmatter keys Claude Code and the official marketplace document for skills. An
 # undocumented key only warns: Claude Code adds keys faster than this list can track, and a
@@ -463,8 +470,8 @@ def check_load_dirs(root: Path, rep: Report) -> None:
         for entry in sorted(skills.iterdir(), key=lambda p: p.name):
             if entry.is_dir() and not entry.is_symlink():
                 continue
-            if is_readme(entry.name):
-                continue  # already reported above
+            if is_readme(entry.name) or entry.name == SKILLS_PLACEHOLDER:
+                continue  # a README is reported above; the placeholder only keeps an empty skills/ in git
             rep.error(entry, "is a plain file directly in skills/, where nothing loads it; "
                              "each skill needs its own skills/<name>/ directory")
 

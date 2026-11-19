@@ -145,6 +145,13 @@ expect_clean "shared: no loose files in skills/ — pass" "$d"
 d="$(fixture)"; printf 'loose\n' > "$d/skills/loose.md"
 expect_error "shared: no loose files in skills/ — fail" "$d" \
   "skills/loose.md: is a plain file directly in skills/"
+# The shared skills come from the agentbox-skills plugin, so skills/ may hold no skill at all. It still
+# exists (agentbox mounts it read-only over the skill path), kept in git by a .gitkeep and nothing else.
+d="$(fixture)"; rm -rf "$d/skills/"*; : > "$d/skills/.gitkeep"
+expect_clean "shared: empty skills/ kept by .gitkeep — pass" "$d"
+d="$(fixture)"; rm -rf "$d/skills/"*; : > "$d/skills/.keep"
+expect_error "shared: empty skills/ kept by .gitkeep — fail (any other file)" "$d" \
+  "skills/.keep: is a plain file directly in skills/"
 
 echo "== shared: load directories hold only loadable items"
 # Documentation lives in docs/<dir>.md, so the load directories stay loadable-only. Nested

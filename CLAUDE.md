@@ -40,6 +40,8 @@ These apply to your replies and reports, not to code, comments, commit messages 
 Claude Code, in an agentbox sandbox.
 
 - Skills run as `/<name>`. The subagent tool is `Agent`.
+- The skills shared by all profiles (show-me, ub-mode, learn-repo, ...) come from the `agentbox`
+  plugin and run as `/agentbox:<name>`, e.g. `/agentbox:show-me`.
 - `CLAUDE.md`, `skills/`, `agents/` and `commands/` are mounted read-only. `settings.json` is
   copied fresh at each session start, so a settings change made in a session is lost; durable
   ones go in the profile repo, `agentbox-profile-claude`.

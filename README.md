@@ -9,7 +9,7 @@ A Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launcher.
 | Path | What it is | How agentbox uses it |
 |---|---|---|
 | `CLAUDE.md` | Standing rules, in every session's context | Mounted **read-only** at the user level |
-| `skills/` | One directory per skill, each with a `SKILL.md` | Mounted **read-only** |
+| `skills/` | One directory per skill, each with a `SKILL.md`; skills only this profile has. Empty but for `.gitkeep` now: the skills every profile shares come from the `agentbox-skills` plugin (`plugins.toml`) | Mounted **read-only** |
 | `agents/` | Sub-agent definitions, one `.md` each | Mounted **read-only** |
 | `commands/` | Slash commands, one `.md` each | Mounted **read-only** |
 | `docs/` | Documentation for each load directory, `docs/<dir>.md`, and `docs/decisions.md` | Not loaded — that is the point |
@@ -19,7 +19,7 @@ A Claude Code profile for agentbox (`ab`), a rootless-podman sandbox launcher.
 | `build.sh` | check / status / deploy / install driver | — |
 | `tools/check.py` | The validator `check` runs (python3 ≥ 3.11, stdlib only) | — |
 | `tests/run.sh` | Tests for the validator and the host guards | — |
-| `THIRD_PARTY.md` | Source, commit, license and local changes of vendored skills | — |
+| `THIRD_PARTY.md` | Source, commit, license and local changes of vendored skills (none now), and the declared plugins | — |
 | `seed/` | Keyless copies of files agentbox reads from `~/.config/agentbox/claude/` beside the live profile; the same mechanism as the OMP repo, where it carries `models.yml` and `config.yml`. Nothing uses it for Claude today | `deploy` installs a missing one, never overwrites; `status` reports each |
 | `.dev/` | Scratch space: EGM artifacts (`.dev/docs`), show-me's HTML files | Gitignored; never deployed |
 
@@ -32,7 +32,9 @@ directories are loaded, not read: every `.md` under `commands/` becomes a slash 
 `commands/README.md` shows up as `/README`. `check` errors on a `README*` at any depth in
 any load directory, whatever its case. `agents/` and `commands/` currently do not exist —
 every load directory except `skills/` is optional, and absent means empty; create one when you
-add its first item.
+add its first item. `skills/` must exist even with no skill in it (it is kept by `skills/.gitkeep`):
+agentbox mounts it read-only over Claude Code's skill path, and without that mount the path is
+writable per-project state.
 
 This repo has a sibling, `agentbox-profile-omp`, for OMP. `build.sh`, the `Containerfile`, the
 shared core block of `CLAUDE.md` and the shared `check` rules are kept the same in both, and the
