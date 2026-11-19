@@ -78,7 +78,6 @@ Provenance, licences and local changes of the vendored ones are in that reposito
 | `systematic-debugging` | root-cause a bug or failure before fixing it | yes |
 | `verification-before-completion` | run the checks before claiming work is done | yes |
 | `test-driven-development` | write the test first | yes |
-| `skill-creator` | author and evaluate a skill | yes |
 | `webapp-testing` | drive a local web UI with Playwright (not in the images; see agentbox-skills' THIRD_PARTY.md) | yes |
 | `differential-review` | security-focused review of a PR, commit or diff | yes |
 | `insecure-defaults` | find fail-open insecure defaults (hardcoded secrets, weak auth) | yes |
@@ -91,3 +90,9 @@ The list is the plugin's at the pinned commit; its README is the current one.
 `.gitkeep`, which keeps it in git. It must still exist, because agentbox mounts it read-only
 over the skill path; that `.gitkeep` is the one plain file `check` allows directly in `skills/`.
 A skill every profile should have goes in `agentbox-skills` instead.
+
+## Claude-only skills (in this repo's `skills/`)
+
+| Skill | What for | Model may load it |
+| --- | --- | --- |
+| `skill-creator` | author a skill and test and tune it (its scripts call `claude -p`; vendored from anthropics/skills, see `THIRD_PARTY.md`) | yes |
